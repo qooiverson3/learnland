@@ -488,8 +488,8 @@ function cert(){
   openSheet();const L=NAV.lesson,R=L.reward,s=lessonStars(L.id),r=s/lessonTotal(L);
   const rank=(R.ranks.find(([t])=>r>=t)||R.ranks[R.ranks.length-1])[1];
   app.innerHTML=`<div class="bar"><button class="back" id="back">← 回到${esc(L.scene&&L.scene.name||'地圖')}</button></div>
-    <section class="edict"><h2>${esc(R.title)}</h2><p>特頒此令，嘉獎小史官</p><div><span class="name">${esc(Store.name)}</span></div>
-      <p>${esc(R.body)}，${L.levels.length} 關全部過關，<br>共得 <b>★ ${s}</b> 顆，特封為</p><div class="rank">${esc(rank)}</div>
+    <section class="edict"><h2>${esc(R.title)}</h2><p>${esc(R.lead||'特頒此令，嘉獎小史官')}</p><div><span class="name">${esc(Store.name)}</span></div>
+      <p>${esc(R.body)}，${L.levels.length} 關全部過關，<br>共得 <b>★ ${s}</b> 顆，${esc(R.grant||'特封為')}</p><div class="rank">${esc(rank)}</div>
       <p>${esc(R.blessing)}</p><div class="royal">${esc(R.seal)}</div></section>`;
   $('back').onclick=()=>closeSheet(true);
 }
