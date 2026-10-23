@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check catalog files exist
+        run: |
+          node -e '
+            const fs=require("fs");const c=JSON.parse(fs.readFileSync("content/catalog.json","utf8"));
+            let bad=0;for(const s of c.subjects)for(const l of s.lessons)if(!fs.existsSync(l.file)){console.log("missing",l.file);bad=1}
+            process.exit(bad)'
+      - name: Validate lessons
+        run: |
+          for f in content/*.json; do
+            [ "$(basename "$f")" = catalog.json ] && continue
+            prev=""
+            if git cat-file -e "HEAD~1:$f" 2>/dev/null; then
+              git show "HEAD~1:$f" > /tmp/prev.json && prev=/tmp/prev.json
+            fi
+            node tools/validate.js content/catalog.json "$f" $prev
+          done
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
