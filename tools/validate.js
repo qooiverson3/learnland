@@ -7,7 +7,8 @@ const errs=[],warns=[];const E=m=>errs.push(m),W=m=>warns.push(m);
 // 每個場景模板可用的建築；要和 index.html 的 BUILD / GEAR 保持一致
 const TEMPLATES={
   'ancient-city':['gate','market','mansion','library','station','palace','school','teahouse','stage','drill','drumtower','hall'],
-  'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop']};
+  'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop'],
+  'harbor-town':['gate','globe','compass','port','airport','ferry','islet','netbeach','fishhut','temple','canoe','stage','lighthouse','house']};
 const TYPES=['mc','order','match','cloze','open','num'];
 const numRe=/^-?\d+(\.\d+)?$/;
 const idRe=/^[a-z0-9][a-z0-9-]*$/;
