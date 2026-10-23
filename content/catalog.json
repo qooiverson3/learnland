@@ -7,6 +7,9 @@
     {"id": "zh-5a-03", "grade": "5上", "no": 3, "title": "廉頗與藺相如", "place": "邯鄲城", "file": "content/zh-5a-03.json"}
    ]},
   {"id": "sci", "name": "自然", "region": "森林島", "seal": "自", "theme": "forest", "lessons": []},
-  {"id": "math", "name": "數學", "region": "機關城", "seal": "數", "theme": "blocks", "lessons": []}
+  {"id": "math", "name": "數學", "region": "機關城", "seal": "數", "theme": "blocks",
+   "lessons": [
+    {"id": "math-5a-01", "grade": "5上", "no": 1, "title": "多位小數與加減", "place": "小數機關城", "file": "content/math-5a-01.json"}
+   ]}
  ]
 }

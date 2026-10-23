@@ -176,6 +176,22 @@ textarea{min-height:110px;resize:vertical}
 .edict .rank{font-size:clamp(26px,6vw,36px);font-weight:700;color:var(--seal)}
 .edict .name{font-size:28px;font-weight:700;border-bottom:2px solid var(--cord);display:inline-block;min-width:6em;padding:0 .4em}
 .edict .royal{align-self:flex-end;width:78px;height:78px;border:4px solid var(--seal);color:var(--seal);border-radius:8px;display:grid;place-items:center;font-size:20px;line-height:1.1;font-weight:700;transform:rotate(6deg);white-space:pre-line}
+/* num: type the answer (math) */
+.numrow{display:flex;align-items:center;gap:10px}
+input.numin{width:9em;font-family:var(--f-ui);font-size:26px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.04em;padding:8px 10px;background:var(--surface)}
+input.numin.sm{width:5.4em;font-size:19px;padding:2px 6px;margin:0 3px;border-radius:8px;display:inline-block;vertical-align:baseline}
+input.numin.right{border-color:var(--ok);background:var(--ok-soft)}
+input.numin.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.numtext{line-height:2.6;white-space:pre-line}
+.unit{font-size:20px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:300px}
+.keypad button{font-family:var(--f-ui);font-size:24px;font-weight:600;min-height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums}
+.keypad button:active{background:var(--jade-soft);border-color:var(--jade)}
+.stack{display:inline-grid;gap:0 3px;font-family:var(--f-ui);font-size:24px;font-variant-numeric:tabular-nums;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 20px;justify-items:center;line-height:1.4;margin-top:6px}
+.stack .op{color:var(--seal);font-weight:700;padding-right:8px}
+.stack i{font-style:normal;color:var(--muted);opacity:.6}
+.stack .pt{color:var(--seal);font-weight:700}
+.stack .rule{border-top:2px solid var(--ink);height:0;justify-self:stretch;margin-top:4px}
 @media (max-width:440px){.match{gap:8px}.tile{font-size:18px;padding:8px}.q{font-size:19px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -224,6 +240,7 @@ function zhNum(n){if(n<10)return ZH[n];if(n<20)return '十'+(n%10?ZH[n%10]:'');r
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OK=['答對了！','好眼力！','太厲害了！','完全正確！','真聰明！'];
 const NO=['再想想看','差一點點','回課文找找線索'];
+const NO_MATH=['再算一次看看','差一點點','檢查一下小數點的位置'];
 const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const gradeOrder=g=>(parseInt(g,10)||0)*2+(/下/.test(g)?1:0);
 let toastT;function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
@@ -386,9 +403,9 @@ function level(li,si){
   $('back').onclick=()=>closeSheet(true);
   const body=$('body'),fb=$('fb'),next=$('next'),key=lv.id+'/'+st.id;
   const ctx={key,lessonId:L.id,
-    wrong(msg){fb.className='fb no';fb.innerHTML=`<strong>${pick(NO)}</strong>${msg||''}`;},
-    solved(first,explain){P.stars[key]=Math.max(P.stars[key]||0,first?1:0);save(L.id);
-      fb.className='fb ok';fb.innerHTML=`<strong>${first?'★ ':''}${pick(OK)}</strong>${esc(explain||'')}`;
+    wrong(msg){fb.className='fb no';fb.innerHTML=`<strong>${pick(L.subject==='math'?NO_MATH:NO)}</strong>${msg||''}`;},
+    solved(first,explain,head){P.stars[key]=Math.max(P.stars[key]||0,first?1:0);save(L.id);
+      fb.className='fb ok';fb.innerHTML=`<strong>${head?esc(head):(first?'★ ':'')+pick(OK)}</strong>${esc(explain||'')}`;
       next.hidden=false;next.focus({preventScroll:true});}};
   next.onclick=()=>{if(si+1<lv.steps.length){level(li,si+1);toTop();}else{P.done[lv.id]=true;save(L.id);levelDone(li);toTop();}};
   (STEP[st.type]||stepUnknown)(st,body,ctx);
@@ -403,7 +420,7 @@ function stepMC(st,body,ctx){
   const multi=Array.isArray(st.ans);let tries=0;
   body.innerHTML=col(`${qHead(st)}<div class="opts">${st.opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="optkey">${'ABCDEF'[i]}</span><span>${esc(o)}</span></button>`).join('')}</div>
     ${multi?'<div class="row"><button class="btn" id="mc-check" disabled>確認答案</button></div>':''}`);
-  const btns=[...body.querySelectorAll('.opt')],hint=st.where?`提示：回課文${st.where}找找看。`:'';
+  const btns=[...body.querySelectorAll('.opt')],hint=st.hint?`提示：${esc(st.hint)}`:st.where?`提示：回課文${esc(st.where)}找找看。`:'';
   if(!multi){btns.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;
     if(i===st.ans){btns.forEach(x=>x.disabled=true);b.classList.add('right');ctx.solved(tries===0,st.explain);}
     else{tries++;b.classList.add('wrong','shake');b.disabled=true;ctx.wrong(hint);}});}
@@ -471,7 +488,46 @@ function stepCloze(st,body,ctx){
     else{tries++;draw(true);ctx.wrong('紅色的空格再想想，點一下就能拿出來換掉。');}};
   draw();
 }
-const STEP={mc:stepMC,order:stepOrder,match:stepMatch,open:stepOpen,cloze:stepCloze};
+/* num: the child computes and types a number. One answer (ans + unit) or several blanks in text "[答案]".
+   Answers are compared as numbers (10.01 = 10.010) unless exact:true, which needs the same digits (8.0 ≠ 8, for 取概數). */
+const normNum=v=>String(v).normalize('NFKC').trim().replace(/[，,\s]/g,'').replace(/[。．]/g,'.').replace(/^\+/,'');
+function numEq(v,a,exact){v=normNum(v);if(!/^-?(\d+\.?\d*|\.\d+)$/.test(v))return false;
+  if(v.startsWith('.'))v='0'+v;return exact?v===a:Math.abs(parseFloat(v)-parseFloat(a))<1e-9;}
+function stackHtml(s){
+  const nums=s.nums.map(String),I=Math.max(...nums.map(n=>n.split('.')[0].length)),F=Math.max(...nums.map(n=>(n.split('.')[1]||'').length));
+  const row=(n,k)=>{const [a,b='']=n.split('.');
+    return `<span class="op">${k===nums.length-1?esc(s.op||'+'):''}</span>`+'<span></span>'.repeat(I-a.length)+[...a].map(d=>`<span>${d}</span>`).join('')
+      +(F?`<span class="pt">${n.includes('.')?'.':'<i>.</i>'}</span>`+[...b].map(d=>`<span>${d}</span>`).join('')+'<i>0</i>'.repeat(F-b.length):'');};
+  return `<div class="stack" style="grid-template-columns:repeat(${1+I+(F?F+1:0)},auto)">${nums.map(row).join('')}<span class="rule" style="grid-column:1/-1"></span></div>`;}
+function stepNum(st,body,ctx){
+  const multi=!!st.text,parts=multi?st.text.split(/\[(.+?)\]/):null;
+  const answers=multi?parts.filter((_,i)=>i%2).map(x=>[x]):[[].concat(st.ans).map(String)];
+  const touch=matchMedia('(pointer:coarse)').matches;let tries=0,locked=false,cur=0;
+  const inp=k=>`<input type="text" class="numin${multi?' sm':''}" data-k="${k}" inputmode="${touch?'none':'decimal'}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${multi?`第${k+1}格`:'答案'}">`;
+  const field=multi?`<p class="cloze numtext">${parts.map((p,i)=>i%2?inp((i-1)/2):esc(p)).join('')}</p>`
+    :`<div class="numrow">${inp(0)}${st.unit?`<span class="unit">${esc(st.unit)}</span>`:''}</div>`;
+  const keys=['7','8','9','4','5','6','1','2','3','0','.','⌫'];
+  body.innerHTML=col(`${qHead(st)}${field}<div class="keypad">${keys.map(k=>`<button type="button" data-key="${k}" aria-label="${k==='⌫'?'刪除':k==='.'?'小數點':k}">${k}</button>`).join('')}</div><div id="num-help"></div>
+    <div class="row"><button class="btn ghost" id="num-show" hidden>看看正確答案</button><button class="btn" id="num-check" disabled>確認答案</button></div>`);
+  const ins=[...body.querySelectorAll('.numin')],chk=body.querySelector('#num-check'),show=body.querySelector('#num-show'),help=body.querySelector('#num-help'),pad=body.querySelector('.keypad');
+  const upd=()=>{chk.disabled=locked||ins.some(x=>!normNum(x.value));};
+  const lock=()=>{locked=true;ins.forEach(x=>x.readOnly=true);chk.hidden=true;show.hidden=true;pad.hidden=true;};
+  ins.forEach((x,k)=>{x.onfocus=()=>{cur=k;};x.oninput=()=>{x.classList.remove('wrong');upd();};
+    x.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(!chk.disabled)chk.click();}};});
+  pad.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>{if(locked)return;const x=ins[cur],k=b.dataset.key;
+    x.value=k==='⌫'?x.value.slice(0,-1):(x.value+k).slice(0,12);x.classList.remove('wrong');upd();if(!touch)x.focus({preventScroll:true});});
+  chk.onclick=()=>{if(chk.disabled)return;const res=ins.map((x,k)=>answers[k].some(a=>numEq(x.value,a,st.exact)));
+    ins.forEach((x,k)=>{x.classList.toggle('right',res[k]);x.classList.toggle('wrong',!res[k]);});
+    if(res.every(Boolean)){lock();ctx.solved(tries===0,st.explain);return;}
+    tries++;cur=res.indexOf(false);
+    ctx.wrong((multi&&res.some(Boolean)?'綠色的格子對了，紅色的再算一次。':'')+(st.hint?`提示：${esc(st.hint)}`:''));
+    if(st.stack&&!help.innerHTML)help.innerHTML=`<span class="pool-label">把小數點對齊，缺位補 0 再算一次：</span><br>${stackHtml(st.stack)}`;
+    if(tries>=3)show.hidden=false;upd();};
+  show.onclick=()=>{ins.forEach((x,k)=>{x.value=answers[k][0];x.classList.remove('wrong');x.classList.add('right');});lock();
+    ctx.solved(false,st.explain,'正確答案在這裡，看完說明再往下走');};
+  upd();if(!touch)setTimeout(()=>ins[0].focus({preventScroll:true}),60);
+}
+const STEP={mc:stepMC,order:stepOrder,match:stepMatch,open:stepOpen,cloze:stepCloze,num:stepNum};
 
 function levelDone(li){
   const L=NAV.lesson,lv=L.levels[li],P=lp(L.id),got=lv.steps.reduce((n,st)=>n+(P.stars[lv.id+'/'+st.id]||0),0),n=nextLevel(L);
@@ -718,8 +774,22 @@ function init3D(){
     return {group,places,visitD:34,home:{x:0,z:0,d:Math.max(90,span*1.15),az:.55,pol:.9,min:30,max:Math.max(200,span*2.4)}};
   }
 
-  /* ================= LESSON VIEW: ancient-city template ================= */
-  function buildLesson(L){
+  /* ================= LESSON VIEW ================= */
+  // One building per level from the template's kit; a seal flag appears on top once the level is passed.
+  function levelPlaces(group,L,used,spotOf,kit,fallback){
+    return used.map((lv,i)=>{const spec=typeof lv.building==='string'?{type:lv.building}:(lv.building||{});
+      const g=(kit[spec.type]||kit[fallback])(spec);const [x,z]=spotOf(i);g.position.set(x,0,z);
+      const flag=banner(lv.seal,'#b5321d','#f7efd9',3.2);flag.position.set(0,g.userData.top-.6,0);flag.visible=false;g.add(flag);g.userData.flag=flag;group.add(g);
+      const p=mark(g,i,()=>{const P=lp(L.id),done=!!P.done[lv.id];return {seal:lv.seal,name:lv.place,sub:'',cls:done?'done':(i===nextLevel(L)?'next':'')};},()=>enterLevel(i));
+      p.idx=i;return p;});
+  }
+  const showFlags=(L,places,used)=>{const P=lp(L.id);places.forEach((p,i)=>p.obj.userData.flag.visible=!!P.done[used[i].id]);};
+  const waveFlags=(places,now)=>places.forEach(p=>{const f=p.obj.userData.flag;if(f.visible)f.userData.cloth.rotation.y=Math.sin(now/500+p.obj.position.x)*.25;});
+  const TEMPLATES={'ancient-city':buildAncientCity,'gear-city':buildGearCity};
+  function buildLesson(L){return (TEMPLATES[L.scene&&L.scene.template]||buildAncientCity)(L);}
+
+  /* ---- ancient-city (古城) ---- */
+  function buildAncientCity(L){
     const group=new T.Group(),HALF=40;
     group.add(flat(600,600,C.grass,0,0,0));group.add(flat(HALF*2,HALF*2,C.earth,0,0,.02));
     [[0,-(HALF+5),HALF*2+18,7],[0,HALF+5,HALF*2+18,7],[-(HALF+5),0,7,HALF*2+4],[HALF+5,0,7,HALF*2+4]].forEach(([x,z,w,d])=>group.add(flat(w,d,C.water,x,z,.03)));
@@ -738,21 +808,141 @@ function init3D(){
     const free=(x,z)=>!busy.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2&&Math.abs(z-bz)<d/2)&&Math.abs(z-4)>4;
     const r=rng(7),tp=[];for(let i=0;i<600&&tp.length<40;i++){const x=(r()*2-1)*(HALF-4),z=(r()*2-1)*(HALF-4);if(free(x,z))tp.push([x,z,.8+r()*.6]);}
     for(let i=0;i<40;i++){const a=r()*Math.PI*2,d=HALF+16+r()*40;tp.push([Math.cos(a)*d,Math.sin(a)*d,1+r()*.8]);}trees(group,tp);
-    const places=used.map((lv,i)=>{const spec=typeof lv.building==='string'?{type:lv.building}:(lv.building||{});
-      const g=(BUILD[spec.type]||BUILD.hall)(spec);g.position.set(SPOTS[i][0],0,SPOTS[i][1]);
-      const flag=banner(lv.seal,'#b5321d','#f7efd9',3.2);flag.position.set(0,g.userData.top-.6,0);flag.visible=false;g.add(flag);g.userData.flag=flag;group.add(g);
-      const p=mark(g,i,()=>{const P=lp(L.id),done=!!P.done[lv.id];return {seal:lv.seal,name:lv.place,sub:'',cls:done?'done':(i===nextLevel(L)?'next':'')};},()=>enterLevel(i));
-      p.idx=i;return p;});
+    const places=levelPlaces(group,L,used,i=>SPOTS[i],BUILD,'hall');
     const cart=new T.Group();cart.add(box(2.6,1.3,1.7,C.wood,0,1.45,0));cart.add(box(2.9,.22,2,C.tile,0,2.3,0));
     const wheels=[-.95,.95].map(z=>{const w=cyl(.7,.7,.18,C.dark,0,.7,z,14);w.rotation.x=Math.PI/2;cart.add(w);return w;});
     cart.add(box(1.9,.9,.7,C.horse,3.4,1.55,0));cart.add(box(.5,.9,.45,C.horse,4.4,2.2,0));[[2.8,.3],[2.8,-.3],[4,.3],[4,-.3]].forEach(([x,z])=>cart.add(box(.18,1.1,.18,C.horse,x,.55,z)));
     cart.position.set(-26,0,5);group.add(cart);let dir=1,ang=0;
     return {group,places,visitD:38,home:{x:0,z:4,d:95,az:.62,pol:.95,min:28,max:160},
-      refresh(){const P=lp(L.id);places.forEach((p,i)=>p.obj.userData.flag.visible=!!P.done[used[i].id]);},
+      refresh(){showFlags(L,places,used);},
       update(dt,now){const target=dir>0?0:Math.PI;if(Math.abs(ang-target)>.01){ang+=(dir>0?-1:1)*dt*2;if(dir>0&&ang<0)ang=0;if(dir<0&&ang>Math.PI)ang=Math.PI;}
         else{cart.position.x+=dir*dt*5;wheels.forEach(w=>w.rotation.y+=dt*7*dir);if(cart.position.x>27)dir=-1;if(cart.position.x<-27)dir=1;}
         cart.rotation.y=ang;cart.position.z=ang>Math.PI/2?3:5;
-        places.forEach(p=>{const f=p.obj.userData.flag;if(f.visible)f.userData.cloth.rotation.y=Math.sin(now/500+p.obj.position.x)*.25;});}};
+        waveFlags(places,now);}};
+  }
+
+  /* ---- gear-city (機關城) for math: block buildings, moving gears, a little train.
+     Level 1 stands at the gate; the last level always stands on the central tower spot at the back. ---- */
+  Object.assign(C,{blue:0x3f7fb0,pale:0xe7e0cf,steel:0x5d6b73,white:0xf6f3ea,orange:0xe8862a,yellow:0xe6c21a,guava:0xd9566b,lime:0x8cc63f,glass:0x9fc4d6});
+  let SPIN=[];
+  const spin=(o,ax,sp)=>{SPIN.push(dt=>o.rotation[ax]+=dt*sp);return o;};
+  function gear(r,t,c,n=10){const g=new T.Group(),d=cyl(r,r,t,c,0,0,0,24);d.rotation.x=Math.PI/2;g.add(d);
+    for(let i=0;i<n;i++){const a=i/n*Math.PI*2,k=box(r*.34,r*.34,t,c,Math.cos(a)*r*1.08,Math.sin(a)*r*1.08,0);k.rotation.z=a;g.add(k);}
+    const h=cyl(r*.3,r*.3,t+.24,C.steel,0,0,0,12);h.rotation.x=Math.PI/2;g.add(h);return g;}
+  function canvasTex(w,h,draw){const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);const t=new T.CanvasTexture(cv);return t;}
+  function gridTex(bg,line,n){return canvasTex(128,128,(g,w)=>{g.fillStyle=bg;g.fillRect(0,0,w,w);g.strokeStyle=line;g.lineWidth=2;
+    for(let i=0;i<=n;i++){const p=i*w/n;g.beginPath();g.moveTo(p,0);g.lineTo(p,w);g.moveTo(0,p);g.lineTo(w,p);g.stroke();}});}
+  const winRow=(g,n,w,y,z,c=C.glass)=>{for(let i=0;i<n;i++)g.add(box(.9,1,.12,c,-w/2+(i+.5)*w/n,y,z));};
+  const kitBanner=(g,o,x,z,h=4.5,bg='#2c6857')=>{if(o.banner){const b=banner(o.banner,bg,'#f7efd9',h);b.position.set(x,0,z);g.add(b);}};
+  const GEAR={
+    gate:(o)=>{const g=new T.Group();
+      [[-5,C.c1],[5,C.blue]].forEach(([x,c])=>{for(let j=0;j<4;j++)g.add(box(3,2,3,j%2?C.c3:c,x,1+j*2,0));});
+      g.add(box(14,1.6,3.4,C.steel,0,8.8,0));g.add(box(4,.6,3.6,C.c3,0,9.9,0));
+      const gr=gear(2.4,.7,C.c3,12);gr.position.set(0,12.6,0);g.add(spin(gr,'z',.6));kitBanner(g,o,-8.2,1.8,5.5,'#b5321d');
+      g.userData.top=15.4;return g;},
+    gearworks:(o)=>{const g=new T.Group();g.add(box(9,4.6,6,C.white,0,2.3,0));g.add(box(9.6,.5,6.6,C.c2,0,4.85,0));
+      for(let i=0;i<3;i++){const s=box(3.1,1.4,6.6,C.c2,-3.1+i*3.1,5.6,0);s.rotation.z=-.25;g.add(s);}
+      g.add(cyl(.5,.6,4.4,C.steel,-3.4,6.6,-1.8,8));g.add(box(1.8,2.8,.15,C.wood,-2.6,1.4,3.05));winRow(g,2,4,3.3,3.05);
+      const a=gear(1.5,.4,C.c3,10),b=gear(1.05,.4,C.c1,8);a.position.set(1.5,2.4,3.4);b.position.set(3.68,1.5,3.4);g.add(spin(a,'z',.8),spin(b,'z',-1.14));
+      kitBanner(g,o,6,3);g.userData.top=8.4;return g;},
+    clocktower:(o)=>{const g=new T.Group();g.add(box(6,1,6,C.stone,0,.5,0));g.add(box(5,12,5,C.white,0,7,0));g.add(box(5.6,.6,5.6,C.blue,0,13.3,0));
+      const roof=pyr(5.6,5.6,3.4,C.c1,13.6);g.add(roof);
+      const face=cyl(1.9,1.9,.3,0xfdf8ec,0,10,2.6,28);face.rotation.x=Math.PI/2;g.add(face);
+      const ring=new T.Mesh(new T.TorusGeometry(1.95,.16,6,28),M(C.c3));ring.position.set(0,10,2.76);g.add(ring);
+      [[1.6,.16,.5],[1.15,.24,.04]].forEach(([len,w,sp])=>{const p=new T.Group();p.add(box(w,len,.1,C.dark,0,len/2-.15,0));p.position.set(0,10,2.86);g.add(spin(p,'z',-sp));});
+      g.add(box(1.8,2.8,.15,C.wood,0,2.4,2.55));winRow(g,2,3,5.6,2.55);kitBanner(g,o,4.2,3,4.5,'#3f7fb0');g.userData.top=17;return g;},
+    scale:(o)=>{const g=new T.Group();g.add(box(10,1,6,C.stone,0,.5,0));g.add(box(2,1.2,2,C.steel,0,1.6,0));g.add(cyl(.35,.45,5.4,C.c3,0,4.8,0,10));
+      const beam=new T.Group();beam.position.set(0,7.6,0);beam.add(box(9.4,.4,.5,C.c3,0,0,0));beam.add(cone(.5,1,C.c3,0,.7,0,4));
+      [-4.2,4.2].forEach((x,i)=>{const pan=new T.Group();pan.position.set(x,0,0);pan.add(cyl(.05,.05,2.4,C.dark,0,-1.2,0,4));pan.add(cyl(1.4,1,.3,C.c3,0,-2.5,0,16));
+        for(let k=0;k<(i?2:3);k++)pan.add(box(.7,.7,.7,[C.c1,C.blue,C.c2][k],-.5+k*.5,-2+(k%2)*.2,k%2?.3:-.2));beam.add(pan);pan.userData.keep=1;});
+      g.add(beam);SPIN.push((dt,now)=>{const a=Math.sin(now/1100)*.12;beam.rotation.z=a;beam.children.forEach(c=>{if(c.userData.keep)c.rotation.z=-a;});});
+      kitBanner(g,o,-6,2.6);g.userData.top=9;return g;},
+    lab:(o)=>{const g=new T.Group();g.add(box(8,4,6,C.white,0,2,0));g.add(box(8.4,.4,6.4,C.blue,0,4.2,0));
+      const dome=new T.Mesh(new T.SphereGeometry(2.4,18,10,0,Math.PI*2,0,Math.PI/2),M(0xdfe6ea));dome.position.set(-1.2,4.4,-.5);sh(dome);g.add(dome);
+      g.add(box(1.6,2.8,.15,C.wood,-1.6,1.4,3.05));winRow(g,2,3,2.6,3.05);
+      const ms=new T.Group();ms.add(box(2.2,.4,2,C.dark,0,.2,0));ms.add(box(.5,3.2,.7,C.dark,-.7,1.9,0));ms.add(box(1.4,.2,1.4,C.steel,.2,1.7,0));
+      const tube=cyl(.38,.3,2.6,C.white,.25,3.4,0,12);tube.rotation.z=.4;ms.add(tube);ms.add(cyl(.2,.2,.6,C.dark,-.25,4.7,0,8));ms.position.set(6.2,0,2.4);ms.scale.setScalar(1.25);g.add(ms);
+      kitBanner(g,o,-5.6,3);g.userData.top=7.2;return g;},
+    fuelstop:(o)=>{const g=new T.Group();g.add(box(7,.3,2,C.stone,0,.15,0));
+      [[-3.6,-2],[3.6,-2],[-3.6,2],[3.6,2]].forEach(([x,z])=>g.add(cyl(.22,.22,4.6,C.white,x,2.3,z,8)));
+      g.add(box(9,.6,5.6,C.white,0,4.9,0));g.add(box(9.1,.3,5.7,C.blue,0,4.55,0));g.add(box(9.1,.25,5.7,C.c1,0,5.3,0));
+      [-1.6,1.6].forEach(x=>{g.add(box(1,2.1,.8,C.c2,x,1.35,0));g.add(box(.7,.5,.1,C.glass,x,1.9,.42));});
+      g.add(box(3.4,3,3,C.white,0,1.5,-4.4));g.add(box(3.6,.3,3.2,C.c1,0,3.15,-4.4));
+      const tex=canvasTex(256,160,(c,w,h)=>{c.fillStyle='#1d2a2f';c.fillRect(0,0,w,h);c.strokeStyle='#e6c21a';c.lineWidth=8;c.strokeRect(6,6,w-12,h-12);
+        c.fillStyle='#f6f3ea';c.font='bold 30px system-ui,sans-serif';c.textAlign='center';c.fillText(o.label||'95 無鉛',w/2,46);
+        c.fillStyle='#ffcf3a';c.font='bold 74px system-ui,sans-serif';c.fillText(o.sign||'30.4',w/2,128);});
+      g.add(cyl(.2,.2,6,C.steel,6.4,3,1,6));const sign=new T.Mesh(new T.PlaneGeometry(3.2,2),new T.MeshLambertMaterial({map:tex,side:T.DoubleSide}));sign.position.set(6.4,6.6,1.12);g.add(sign);
+      g.userData.top=7.6;return g;},
+    tunnel:(o)=>{const g=new T.Group();const hill=new T.Mesh(new T.SphereGeometry(7,18,10,0,Math.PI*2,0,Math.PI/2),M(C.leaf2));hill.scale.set(1,.85,.75);sh(hill);g.add(hill);
+      g.add(box(5,4.4,1.4,C.stone,0,2.2,4.9));g.add(box(3,2.6,1.5,C.dark,0,1.3,4.95));const arc=cyl(1.5,1.5,1.5,C.dark,0,2.6,4.95,16);arc.rotation.x=Math.PI/2;g.add(arc);
+      g.add(flat(3.2,4.6,C.road,0,7.6,.05));trees(g,[[-3.4,.5,.55,4.2],[3.2,-1,.6,4.4],[0,-3,.5,4.8]]);kitBanner(g,o,4.2,5.4);g.userData.top=7.4;return g;},
+    cubes:(o)=>{const g=new T.Group();g.add(box(13,.4,7,C.wood,0,.2,0));
+      const mt=c=>new T.MeshLambertMaterial({color:c,map:gridTex('#ffffff','rgba(40,40,40,.35)',10)});
+      const blk=(w,h,d,c,x,y,z)=>{const m=sh(new T.Mesh(new T.BoxGeometry(w,h,d),mt(c)));m.position.set(x,y,z);return m;};
+      g.add(blk(3.4,3.4,3.4,C.blue,-4,2.1,0));for(let i=0;i<3;i++)g.add(blk(3.4,.34,3.4,C.c3,.4,.57+i*.36,-.4));
+      for(let i=0;i<4;i++)g.add(blk(.34,.34,3.4,C.c1,3.6+i*.5,.57,-.4));for(let i=0;i<6;i++)g.add(box(.34,.34,.34,C.c2,2.4+(i%3)*.6,.57,2.4+Math.floor(i/3)*.6));
+      kitBanner(g,o,6.6,2.6,4.5,'#c08a1e');g.userData.top=5;return g;},
+    orchard:(o)=>{const g=new T.Group();
+      [[-4,-1.2,C.yellow],[0,-2.6,C.guava],[4,-1.2,C.orange]].forEach(([x,z,fc])=>{g.add(cyl(.3,.4,2.4,C.trunk,x,1.2,z,6));g.add(ball(1.8,C.leaf,x,3.6,z));
+        for(let i=0;i<6;i++){const a=i*1.05;g.add(ball(.32,fc,x+Math.cos(a)*1.55,3.2+(i%2)*.8,z+Math.sin(a)*1.55));}});
+      g.add(box(6,1,1.6,C.wood,0,.5,3.2));[[-2,C.lime],[0,C.guava],[2,C.orange]].forEach(([x,c])=>{for(let k=0;k<3;k++)g.add(ball(.3,c,x-.35+k*.35,1.25,3.2));});
+      kitBanner(g,o,-6,3);g.userData.top=6.2;return g;},
+    windmill:(o)=>{const g=new T.Group();g.add(cyl(1.6,2.4,9,C.white,0,4.5,0,8));g.add(cone(2.5,2.6,C.c1,0,10.3,0,8));
+      const hub=new T.Group();hub.position.set(0,8,2.3);for(let i=0;i<4;i++){const arm=new T.Group();arm.rotation.z=i*Math.PI/2;
+        arm.add(box(.25,4.4,.12,C.wood,0,2.2,0));arm.add(box(1.2,3.4,.06,0xf4efe0,.66,2.6,0));hub.add(arm);}
+      const cap=cyl(.4,.4,.5,C.c3,0,0,0,10);cap.rotation.x=Math.PI/2;hub.add(cap);g.add(spin(hub,'z',.9));
+      g.add(box(1.4,2.4,.15,C.wood,0,1.2,2.25));kitBanner(g,o,3.6,2.4);g.userData.top=12.6;return g;},
+    tower:(o)=>{const g=new T.Group();g.add(box(15,1.2,11,C.stone,0,.6,0));let y=1.2;
+      [[11,4,8,C.c2],[8,3.6,6,C.white],[5.4,3.2,4.4,C.c1]].forEach(([w,h,d,c])=>{g.add(box(w,h,d,c,0,y+h/2,0));winRow(g,Math.round(w/2.4),w-1.4,y+h*.55,d/2+.05,c===C.white?C.glass:C.c3);y+=h;g.add(box(w+.6,.4,d+.6,C.c3,0,y+.2,0));y+=.4;});
+      g.add(box(5,.6,1.4,C.stone,0,.3,6.2));
+      const gr=gear(2.2,.6,C.c3,12);gr.position.set(0,y+2.6,0);g.add(spin(gr,'z',.5));g.add(cyl(.3,.3,2.4,C.steel,0,y+1.2,0,8));
+      if(o.banner){[-1,1].forEach(s=>{const b=banner(o.banner,'#c08a1e','#3b2f12',6);b.position.set(s*9,0,4.6);if(s>0)b.rotation.y=Math.PI;g.add(b);});}
+      g.userData.top=y+5;return g;},
+    workshop:(o)=>{const R={red:C.c1,jade:C.c2,gold:C.c3,blue:C.blue,slate:C.slate};const g=new T.Group();
+      g.add(box(8,4,5.5,C.white,0,2,0));g.add(pyr(9,6.5,2.4,R[o.roof]||C.c2,4));g.add(box(1.6,2.6,.15,C.wood,0,1.3,2.8));winRow(g,2,6,2.6,2.8);
+      kitBanner(g,o,5.4,3.2);g.userData.top=6.6;return g;}
+  };
+  function buildGearCity(L){
+    SPIN=[];const group=new T.Group(),HALF=40;
+    group.add(flat(600,600,C.blockGround,0,0,0));
+    const pt=gridTex('#e7e0cf','rgba(120,110,90,.28)',2);pt.wrapS=pt.wrapT=T.RepeatWrapping;pt.repeat.set(20,20);
+    const pave=new T.Mesh(new T.PlaneGeometry(HALF*2,HALF*2),new T.MeshLambertMaterial({map:pt}));pave.rotation.x=-Math.PI/2;pave.position.y=.02;pave.receiveShadow=true;group.add(pave);
+    group.add(flat(6,HALF+6,C.road,0,6,.05));group.add(flat(HALF*2-6,5,C.road,0,5,.06));
+    const plaza=new T.Mesh(new T.CircleGeometry(7.5,36),M(C.road));plaza.rotation.x=-Math.PI/2;plaza.position.set(0,.05,-9);plaza.receiveShadow=true;group.add(plaza);
+    [4.15,5.85].forEach(z=>group.add(box(62,.12,.18,C.steel,0,.12,z)));
+    // walls of coloured blocks, every other block doubled as a crenel
+    const wp=[],st=2.5;for(let x=-HALF;x<=HALF+.01;x+=st){wp.push([x,-HALF]);if(Math.abs(x)>7)wp.push([x,HALF]);}
+    for(let z=-HALF+st;z<HALF-.01;z+=st){wp.push([-HALF,z]);wp.push([HALF,z]);}
+    const all=[...wp.map(p=>[p[0],1.2,p[1]]),...wp.filter((_,i)=>i%2===0).map(p=>[p[0],3.6,p[1]])];
+    const wall=new T.InstancedMesh(new T.BoxGeometry(2.4,2.4,2.4),new T.MeshLambertMaterial({color:0xffffff}),all.length);wall.castShadow=wall.receiveShadow=true;
+    const pal=[C.c1,C.c3,C.c2,C.blue,C.slate].map(c=>new T.Color(c)),dm=new T.Object3D();
+    all.forEach(([x,y,z],i)=>{dm.position.set(x,y,z);dm.updateMatrix();wall.setMatrixAt(i,dm.matrix);wall.setColorAt(i,pal[(Math.round((x+z)/st)+(y>2?2:0)+50)%5]);});group.add(wall);
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b],k)=>{for(let j=0;j<3;j++)group.add(box(4,2.6,4,[C.c1,C.c3,C.blue,C.c2][(j+k)%4],a*HALF,1.3+j*2.6,b*HALF));
+      const r=pyr(4.6,4.6,2.4,C.c1,7.8);r.position.x=a*HALF;r.position.z=b*HALF;group.add(r);});
+    // central plaza: a big horizontal gear turning, with a small upright one on its axle
+    group.add(cyl(3.2,3.6,1.2,C.stone,0,.6,-9,16));const hg=gear(4,.7,C.c3,14);hg.rotation.x=-Math.PI/2;const hold=new T.Group();hold.add(hg);hold.position.set(0,1.6,-9);group.add(spin(hold,'y',.3));
+    group.add(cyl(.3,.3,4,C.steel,0,3.6,-9,8));const vg=gear(1.4,.5,C.c1,9);vg.position.set(0,5.8,-9);group.add(spin(vg,'z',-.8));
+    for(let x=-30;x<=30;x+=10)[1.4,8.6].forEach(z=>{if(Math.abs(x)<4)return;group.add(cyl(.12,.12,3.2,C.steel,x,1.6,z,6));const l=new T.Mesh(new T.SphereGeometry(.45,10,8),lanternMat);l.position.set(x,3.3,z);group.add(l);});
+    const n=L.levels.length,used=L.levels.slice(0,16);
+    const S=[[0,HALF],[-15,17],[15,17],[-17,-6],[17,-6],[-31,-14],[32,-12],[-28,-31],[26,-24],[-14,-34],[14,-34],[-27,29],[27,28],[-33,10],[33,10]],FIN=[0,-25];
+    const spotOf=i=>i===used.length-1&&i>0?FIN:S[i];
+    const busy=[[0,5,8,99],[0,5,70,6],[0,-9,16,16],...used.map((_,i)=>[spotOf(i)[0],spotOf(i)[1],15,13])];
+    const free=(x,z)=>!busy.some(([bx,bz,w,d])=>Math.abs(x-bx)<w/2&&Math.abs(z-bz)<d/2);
+    const r=rng(9),tp=[];for(let i=0;i<500;i++){const x=(r()*2-1)*(HALF-5),z=(r()*2-1)*(HALF-5);if(!free(x,z))continue;
+      if(i%3)tp.push([x,z,.6+r()*.4]);else{const h=1+Math.floor(r()*3);for(let k=0;k<h;k++)group.add(box(1.4,1.4,1.4,[C.c1,C.c3,C.c2,C.blue][(i+k)%4],x+(k%2)*.3,.7+k*1.4,z));}
+      busy.push([x,z,4,4]);if(tp.length>24)break;}
+    for(let i=0;i<46;i++){const a=r()*Math.PI*2,d=HALF+12+r()*40;tp.push([Math.cos(a)*d,Math.sin(a)*d,1+r()*.8]);}trees(group,tp,C.leaf2);
+    const places=levelPlaces(group,L,used,spotOf,GEAR,'workshop');
+    const train=new T.Group();train.add(box(3,1.6,1.8,C.c1,0,1.5,0));train.add(box(1.4,1.3,1.9,C.c2,-.7,2.9,0));train.add(cyl(.35,.45,1.2,C.dark,1,2.9,0,8));
+    train.add(box(2.6,1.3,1.7,C.c3,-3.4,1.35,0));train.add(box(2.6,1.3,1.7,C.blue,-6.4,1.35,0));
+    const tw=[];[1,-.9,-2.6,-4.2,-5.6,-7.2].forEach(x=>[-.95,.95].forEach(z=>{const w=cyl(.5,.5,.18,C.dark,x,.55,z,12);w.rotation.x=Math.PI/2;train.add(w);tw.push(w);}));
+    train.position.set(-24,0,5);group.add(train);let dir=1,ang=0;
+    return {group,places,visitD:38,home:{x:0,z:2,d:98,az:.62,pol:.95,min:28,max:160},
+      refresh(){showFlags(L,places,used);},
+      update(dt,now){SPIN.forEach(f=>f(dt,now));
+        const target=dir>0?0:Math.PI;if(Math.abs(ang-target)>.01){ang+=(dir>0?-1:1)*dt*2;if(dir>0&&ang<0)ang=0;if(dir<0&&ang>Math.PI)ang=Math.PI;}
+        else{train.position.x+=dir*dt*6;tw.forEach(w=>w.rotation.y+=dt*8*dir);if(train.position.x>27)dir=-1;if(train.position.x<-27)dir=1;}
+        train.rotation.y=ang;waveFlags(places,now);}};
   }
 
   return {setView,refresh,visitBy,home:goHome,buildWorld,buildSubject,buildLesson};

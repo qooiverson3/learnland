@@ -4,8 +4,12 @@ const [,,catPath,lessonPath,prevPath]=process.argv;
 const cat=JSON.parse(fs.readFileSync(catPath,'utf8'));
 const L=JSON.parse(fs.readFileSync(lessonPath,'utf8'));
 const errs=[],warns=[];const E=m=>errs.push(m),W=m=>warns.push(m);
-const BUILD=['gate','market','mansion','library','station','palace','school','teahouse','stage','drill','drumtower','hall'];
-const TYPES=['mc','order','match','cloze','open'];
+// 每個場景模板可用的建築；要和 index.html 的 BUILD / GEAR 保持一致
+const TEMPLATES={
+  'ancient-city':['gate','market','mansion','library','station','palace','school','teahouse','stage','drill','drumtower','hall'],
+  'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop']};
+const TYPES=['mc','order','match','cloze','open','num'];
+const numRe=/^-?\d+(\.\d+)?$/;
 const idRe=/^[a-z0-9][a-z0-9-]*$/;
 if(!/^[a-z]+-\d+[ab]-\d{2}$/.test(L.id))E(`lesson id "${L.id}" 不符合 <subject>-<年級><a|b>-<兩位數課次>`);
 const sub=cat.subjects.find(s=>s.id===L.subject);
@@ -15,7 +19,8 @@ else{const e=sub.lessons.find(x=>x.id===L.id);
   else{if(e.file!==`content/${L.id}.json`)E(`catalog file 應為 content/${L.id}.json`);
     ['grade','no','title'].forEach(k=>{if(e[k]!==L[k])E(`catalog 與課程的 ${k} 不一致：${e[k]} vs ${L[k]}`);});}}
 const allIds=new Set();cat.subjects.forEach(s=>s.lessons.forEach(x=>{if(allIds.has(x.id))E(`catalog 重複的課程 id ${x.id}`);allIds.add(x.id);}));
-if(!L.scene||L.scene.template!=='ancient-city')E('scene.template 目前只支援 "ancient-city"');
+const tpl=L.scene&&L.scene.template,BUILD=TEMPLATES[tpl]||[];
+if(!TEMPLATES[tpl])E(`scene.template "${tpl}" 不存在，可用：${Object.keys(TEMPLATES).join(', ')}`);
 if(!Array.isArray(L.levels)||!L.levels.length)E('levels 不能是空的');
 if(L.levels.length>16)E(`levels 最多 16 關（目前 ${L.levels.length}）`);
 const lvIds=new Set();let total=0;const ansPos={};
@@ -48,6 +53,13 @@ L.levels.forEach((lv,li)=>{const at=`第${li+1}關(${lv.id})`;
       (st.extra||[]).forEach(x=>{if(ans.includes(x))E(`${sat} extra「${x}」和答案重複`);});
       if(!(st.extra||[]).length)W(`${sat} 沒有 extra 干擾詞`);}
     if(st.type==='open'&&!(st.ideas||[]).length)E(`${sat} 開放題要有 ideas`);
+    if(st.type==='num'){
+      if(st.text){const ans=st.text.split(/\[(.+?)\]/).filter((_,i)=>i%2);if(!ans.length)E(`${sat} text 沒有 [答案] 空格`);
+        ans.forEach(a=>{if(!numRe.test(a))E(`${sat} 空格答案「${a}」不是數字`);});if(st.ans!==undefined)W(`${sat} 有 text 時 ans 不會用到`);}
+      else{const a=[].concat(st.ans===undefined?[]:st.ans);if(!a.length||a.some(x=>typeof x!=='string'||!numRe.test(x)))E(`${sat} ans 要是數字字串（例如 "10.01"），可用陣列列出多個可接受答案`);}
+      if(st.stack){const ns=st.stack.nums||[];if(ns.length<2||ns.some(x=>typeof x!=='string'||!numRe.test(x)))E(`${sat} stack.nums 至少 2 個數字字串`);
+        if(st.stack.op&&!['+','-','－'].includes(st.stack.op))E(`${sat} stack.op 只能是 + 或 -`);}
+      if(st.exact!==undefined&&typeof st.exact!=='boolean')E(`${sat} exact 要是 true 或 false`);}
   });
   if(!(lv.steps||[]).length)E(`${at} 沒有題目`);});
 if(L.reward){const R=L.reward;if(!lvIds.has(R.at))E(`reward.at "${R.at}" 不是任何一關的 id`);
