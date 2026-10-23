@@ -9,7 +9,8 @@
   {"id": "sci", "name": "自然", "region": "森林島", "seal": "自", "theme": "forest", "lessons": []},
   {"id": "math", "name": "數學", "region": "機關城", "seal": "數", "theme": "blocks",
    "lessons": [
-    {"id": "math-5a-01", "grade": "5上", "no": 1, "title": "多位小數與加減", "place": "小數機關城", "file": "content/math-5a-01.json"}
+    {"id": "math-5a-01", "grade": "5上", "no": 1, "title": "多位小數與加減", "place": "小數機關城", "file": "content/math-5a-01.json"},
+    {"id": "math-5a-02", "grade": "5上", "no": 2, "title": "因數與公因數", "place": "因數纜車城", "file": "content/math-5a-02.json"}
    ]},
   {"id": "soc", "name": "社會", "region": "海港島", "seal": "社", "theme": "harbor",
    "lessons": [

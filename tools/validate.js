@@ -7,7 +7,7 @@ const errs=[],warns=[];const E=m=>errs.push(m),W=m=>warns.push(m);
 // 每個場景模板可用的建築；要和 index.html 的 BUILD / GEAR 保持一致
 const TEMPLATES={
   'ancient-city':['gate','market','mansion','library','station','palace','school','teahouse','stage','drill','drumtower','hall'],
-  'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop'],
+  'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop','cablecar'],
   'harbor-town':['gate','globe','compass','port','airport','ferry','islet','netbeach','fishhut','temple','canoe','stage','lighthouse','house']};
 const TYPES=['mc','order','match','cloze','open','num'];
 const numRe=/^-?\d+(\.\d+)?$/;
@@ -55,7 +55,9 @@ L.levels.forEach((lv,li)=>{const at=`第${li+1}關(${lv.id})`;
       if(!(st.extra||[]).length)W(`${sat} 沒有 extra 干擾詞`);}
     if(st.type==='open'&&!(st.ideas||[]).length)E(`${sat} 開放題要有 ideas`);
     if(st.type==='num'){
-      if(st.text){const ans=st.text.split(/\[(.+?)\]/).filter((_,i)=>i%2);if(!ans.length)E(`${sat} text 沒有 [答案] 空格`);
+      if(st.set){const a=Array.isArray(st.ans)?st.ans:[];if(a.length<1||a.some(x=>typeof x!=='string'||!numRe.test(x)))E(`${sat} set 題的 ans 要是數字字串陣列（例如 ["1","2","4"]）`);
+        if(new Set(a.map(Number)).size!==a.length)E(`${sat} set 題的 ans 有重複`);if(st.text)E(`${sat} set 題不能有 text`);if(st.stack)W(`${sat} set 題不會顯示 stack`);}
+      else if(st.text){const ans=st.text.split(/\[(.+?)\]/).filter((_,i)=>i%2);if(!ans.length)E(`${sat} text 沒有 [答案] 空格`);
         ans.forEach(a=>{if(!numRe.test(a))E(`${sat} 空格答案「${a}」不是數字`);});if(st.ans!==undefined)W(`${sat} 有 text 時 ans 不會用到`);}
       else{const a=[].concat(st.ans===undefined?[]:st.ans);if(!a.length||a.some(x=>typeof x!=='string'||!numRe.test(x)))E(`${sat} ans 要是數字字串（例如 "10.01"），可用陣列列出多個可接受答案`);}
       if(st.stack){const ns=st.stack.nums||[];if(ns.length<2||ns.some(x=>typeof x!=='string'||!numRe.test(x)))E(`${sat} stack.nums 至少 2 個數字字串`);
