@@ -4,6 +4,7 @@
   {"id": "zh", "name": "國文", "region": "古城區", "seal": "文", "theme": "ancient",
    "buddy": "momo",
    "lessons": [
+    {"id": "zh-5a-01", "grade": "5上", "no": 1, "title": "你我之間", "place": "你我之城", "file": "content/zh-5a-01.json"},
     {"id": "zh-5a-02", "grade": "5上", "no": 2, "title": "風起，大家都在", "place": "風之城", "file": "content/zh-5a-02.json"},
     {"id": "zh-5a-03", "grade": "5上", "no": 3, "title": "廉頗與藺相如", "place": "邯鄲城", "file": "content/zh-5a-03.json"},
     {"id": "zh-5a-04", "grade": "5上", "no": 4, "title": "來場快樂的桌遊", "place": "桌遊城", "file": "content/zh-5a-04.json"}
