@@ -1,4 +1,4 @@
-# 學習大陸
+# 學習小夥伴
 
 國小課程的 3D 闖關地圖。第一層是學科島，第二層是每一課的地標，第三層是課程場景，每棟建築是一關。
 
@@ -49,7 +49,7 @@ python3 -m http.server 8080
 
 ## 新增課程
 
-在 Claude 用 `learnland-lesson` skill：附上課本照片，說「加進學習大陸」。新的課程檔放進 `content/`、更新 `content/catalog.json`，推到 `main` 即可。CI 會檢查題庫格式，並比對上一版，避免已發布的題目編號被更動。
+在 Claude 用 `learnland-lesson` skill：附上課本照片，說「加進學習小夥伴」。新的課程檔放進 `content/`、更新 `content/catalog.json`，推到 `main` 即可。CI 會檢查題庫格式，並比對上一版，避免已發布的題目編號被更動。
 
 ## 注意
 

@@ -2,17 +2,21 @@
  "version": 1,
  "subjects": [
   {"id": "zh", "name": "國文", "region": "古城區", "seal": "文", "theme": "ancient",
+   "buddy": "momo",
    "lessons": [
     {"id": "zh-5a-02", "grade": "5上", "no": 2, "title": "風起，大家都在", "place": "風之城", "file": "content/zh-5a-02.json"},
     {"id": "zh-5a-03", "grade": "5上", "no": 3, "title": "廉頗與藺相如", "place": "邯鄲城", "file": "content/zh-5a-03.json"}
    ]},
-  {"id": "sci", "name": "自然", "region": "森林島", "seal": "自", "theme": "forest", "lessons": []},
+  {"id": "sci", "name": "自然", "region": "森林島", "seal": "自", "theme": "forest", "buddy": "diandian",
+   "lessons": []},
   {"id": "math", "name": "數學", "region": "機關城", "seal": "數", "theme": "blocks",
+   "buddy": "chichi",
    "lessons": [
     {"id": "math-5a-01", "grade": "5上", "no": 1, "title": "多位小數與加減", "place": "小數機關城", "file": "content/math-5a-01.json"},
     {"id": "math-5a-02", "grade": "5上", "no": 2, "title": "因數與公因數", "place": "因數纜車城", "file": "content/math-5a-02.json"}
    ]},
   {"id": "soc", "name": "社會", "region": "海港島", "seal": "社", "theme": "harbor",
+   "buddy": "langlang",
    "lessons": [
     {"id": "soc-5a-01", "grade": "5上", "no": 1, "title": "臺灣的地理位置與文化發展有何關係？", "place": "海港小鎮", "file": "content/soc-5a-01.json"}
    ]}
