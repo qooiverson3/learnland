@@ -18,7 +18,8 @@
   {"id": "soc", "name": "社會", "region": "海港島", "seal": "社", "theme": "harbor",
    "buddy": "langlang",
    "lessons": [
-    {"id": "soc-5a-01", "grade": "5上", "no": 1, "title": "臺灣的地理位置與文化發展有何關係？", "place": "海港小鎮", "file": "content/soc-5a-01.json"}
+    {"id": "soc-5a-01", "grade": "5上", "no": 1, "title": "臺灣的地理位置與文化發展有何關係？", "place": "海港小鎮", "file": "content/soc-5a-01.json"},
+    {"id": "soc-5a-02", "grade": "5上", "no": 2, "title": "社會規範如何影響人們的行為？", "place": "秩序港灣", "file": "content/soc-5a-02.json"}
    ]}
  ]
 }
