@@ -50,6 +50,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Write config.js from secrets
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }}
+          GAS_TOKEN: ${{ secrets.GAS_TOKEN }}
+        run: |
+          printf 'window.LEARNLAND_GAS = %s;\nwindow.LEARNLAND_TOKEN = %s;\n' \
+            "$(node -e 'console.log(JSON.stringify(process.env.GAS_URL||""))')" \
+            "$(node -e 'console.log(JSON.stringify(process.env.GAS_TOKEN||""))')" \
+            > config.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

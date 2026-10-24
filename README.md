@@ -10,7 +10,7 @@
 | --- | --- |
 | `index.html` | 遊戲引擎（3D 地圖、題目、帳號、進度） |
 | `favicon.ico`、`apple-touch-icon.png`、`icon-512.png` | 網頁與手機主畫面圖示（紅色「學」字印章） |
-| `config.js` | Google Apps Script 網址與 TOKEN |
+| `config.js` | Google Apps Script 網址與 TOKEN（repo 裡是空字串，部署時由 Actions secret 產生，見下） |
 | `db-gas.js` | 把進度讀寫到 Google 試算表 |
 | `content/catalog.json` | 學科與課程目錄 |
 | `content/<課程 id>.json` | 每一課的關卡與題目 |
@@ -30,7 +30,8 @@ repo 的 Settings → Pages → Build and deployment → Source 選 **GitHub Act
 2. 「擴充功能 → Apps Script」，把 `apps-script/Code.gs` 整個貼上取代原本內容，儲存。
 3. 「專案設定 → 指令碼屬性 → 新增」，名稱 `TOKEN`，值自己取一串英數字。
 4. 「部署 → 新增部署作業」，類型「網頁應用程式」，執行身分「我」，誰可以存取「所有人」，部署並授權。複製 `/exec` 結尾的網址。
-5. 把網址和 TOKEN 填進 `config.js`，commit 並推到 `main`。
+5. 到 repo 的 Settings → Secrets and variables → Actions，新增兩個 secret：`GAS_URL`（網址）、`GAS_TOKEN`（TOKEN）。**不要把網址和 TOKEN 直接填進 `config.js` 再 commit**——這個 repo 是 public 的，commit 進去等於公開給所有人看。部署時 workflow 會用這兩個 secret 自動產生真正的 `config.js`，repo 裡的 `config.js` 保持空字串即可。
+6. 重新推一次 `main`（或到 Actions 分頁手動重跑 workflow），讓新設定生效。
 
 完成後打開網站，登入畫面會顯示「已連上雲端」。試算表會出現三個分頁：
 
@@ -65,6 +66,6 @@ python3 -m http.server 8080
 
 ## 注意
 
-- 免費方案的 GitHub Pages 需要 public repo，所以這裡的題目與設定（包括 Apps Script 網址和 TOKEN）任何人都看得到。TOKEN 只能擋掉隨便亂打網址的人，不是真正的密碼。
+- 免費方案的 GitHub Pages 需要 public repo，這裡的題目任何人都看得到；Apps Script 網址和 TOKEN 現在改放在 Actions secret，不會進 git 歷史，但實際打開網站後，瀏覽器的開發工具（Network、原始碼）還是看得到明碼傳送的 TOKEN。TOKEN 只能擋掉隨便亂打網址的人，不是真正的密碼，被看到也只要在 Apps Script 換一個新的、更新 secret 即可。
 - 題目引用了課本內容，請只給家人使用。網站已設定不讓搜尋引擎收錄，但知道網址的人仍然打得開。
 - 冒險者名稱沒有密碼，知道名稱的人可以接著玩那個帳號。
