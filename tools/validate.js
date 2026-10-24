@@ -41,6 +41,8 @@ L.levels.forEach((lv,li)=>{const at=`第${li+1}關(${lv.id})`;
     if(st.who&&!['lian','lin'].includes(st.who))E(`${sat} who 目前只支援 lian/lin，請改用 quote`);
     if(st.quote&&[...st.quote].length>70)W(`${sat} quote 超過 70 字，考慮縮短`);
     if(st.type!=='open'&&!st.explain)W(`${sat} 沒有 explain`);
+    if(!st.src&&!st.where)W(`${sat} 沒有出處（src，例如「數學課本 p.26 第 5 題②」）`);
+    if(st.src!==undefined&&(typeof st.src!=='string'||!st.src.trim()))E(`${sat} src 要是非空字串`);
     if(st.type==='mc'){const n=(st.opts||[]).length;if(n<2||n>6)E(`${sat} opts 要 2～6 個`);
       if(new Set(st.opts).size!==n)E(`${sat} opts 有重複`);
       const a=[].concat(st.ans);if(!a.length||a.some(x=>!Number.isInteger(x)||x<0||x>=n))E(`${sat} ans 超出選項範圍`);

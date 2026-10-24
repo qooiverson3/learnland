@@ -173,6 +173,7 @@ textarea{min-height:110px;resize:vertical}
 .fb.ok{background:var(--ok-soft);border-left:5px solid var(--ok)}
 .fb.no{background:var(--bad-soft);border-left:5px solid var(--bad)}
 .fb strong{display:block;font-size:19px}
+.fb .src{display:block;margin-top:8px;padding-top:8px;border-top:2px dashed color-mix(in srgb,currentColor 18%,transparent);font-family:var(--f-ui);font-size:14px;color:var(--muted)}
 .done-card{align-items:center;text-align:center;padding-block:36px}
 .stamp{width:120px;height:120px;border:5px solid var(--seal);border-radius:14px;display:grid;place-items:center;color:var(--seal);font-size:66px;font-weight:700;transform:rotate(-8deg);animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stamp{from{transform:scale(2.2) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
@@ -278,7 +279,7 @@ const BUDDIES={
     grow:n=>n?`身上有 ${n} 顆彩色螺絲`:'過完一課，就能拿到第一顆彩色螺絲'},
   langlang:{name:'浪浪',eyes:[[84,110],[116,110]],
     art:'<path d="M146 112Q176 88 174 66Q150 80 138 104Z" fill="#BFE7DB" stroke="#9FCFE0" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="122" rx="58" ry="54" fill="#fff" stroke="#9FCFE0" stroke-width="4"/><path d="M94 70Q99 54 110 64" stroke="#9FCFE0" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 118Q28 140 50 162Q66 152 64 128Z" fill="#BFE7DB" stroke="#9FCFE0" stroke-width="3" stroke-linejoin="round"/><path d="M72 78Q102 146 150 150" stroke="#6FA8CF" stroke-width="6" fill="none" stroke-linecap="round"/><ellipse cx="70" cy="128" rx="8" ry="4.5" fill="#FFB8C2"/><ellipse cx="130" cy="128" rx="8" ry="4.5" fill="#FFB8C2"/><path d="M91 122L109 122L100 135Z" fill="#FFB16B" stroke="#F09A4E" stroke-width="2" stroke-linejoin="round"/><rect x="128" y="140" width="36" height="30" rx="8" fill="#7FB6DA"/><path d="M134 160L142 155L150 161L158 156" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M86 174L80 186H94Z" fill="#FFB16B"/><path d="M114 174L108 186H122Z" fill="#FFB16B"/>',
-    ok:['地圖上又多了一個地方！','答對了，飛高高！','記下來了，這個港口好棒！'],no:['先找找北邊在哪裡吧。','再看一次課本的重點。'],
+    ok:['地圖上又多了一個地方！','答對了，飛高高！','記下來了，地圖又更完整了！'],no:['先找找北邊在哪裡吧。','再看一次課本的重點。'],
     grow:n=>n?`地圖袋有 ${n} 枚島嶼貼紙`:'過完一課，地圖袋就多一枚貼紙'},
   diandian:{name:'點點',eyes:[[86,130],[114,130]],wait:'還在森林裡，等自然島開放',
     art:'<path d="M88 70Q78 44 62 40" stroke="#5B4651" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M112 70Q122 44 138 40" stroke="#5B4651" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="60" cy="39" r="7" fill="#5B4651"/><circle cx="140" cy="39" r="7" fill="#5B4651"/><circle cx="100" cy="126" r="60" fill="#FF9F8F"/><path d="M100 66V100" stroke="#E7806F" stroke-width="3" stroke-linecap="round"/><circle cx="58" cy="104" r="9" fill="#6B4E58"/><circle cx="142" cy="104" r="9" fill="#6B4E58"/><circle cx="52" cy="146" r="7" fill="#6B4E58"/><circle cx="148" cy="146" r="7" fill="#6B4E58"/><circle cx="100" cy="80" r="7" fill="#6B4E58"/><ellipse cx="100" cy="134" rx="36" ry="29" fill="#FFF1E6"/><ellipse cx="76" cy="146" rx="6" ry="4" fill="#FFB3B0"/><ellipse cx="124" cy="146" rx="6" ry="4" fill="#FFB3B0"/><path d="M94 146Q100 152 106 146" stroke="#3D3A4F" stroke-width="3" fill="none" stroke-linecap="round"/><line x1="168" y1="176" x2="184" y2="194" stroke="#8C7466" stroke-width="7" stroke-linecap="round"/><circle cx="158" cy="164" r="17" fill="#DDF1F7" stroke="#8C7466" stroke-width="6"/><ellipse cx="146" cy="176" rx="9" ry="8" fill="#FF9F8F"/><ellipse cx="80" cy="186" rx="12" ry="6" fill="#E9877A"/><ellipse cx="120" cy="186" rx="12" ry="6" fill="#E9877A"/>',
@@ -459,8 +460,9 @@ function level(li,si){
     wrong(msg){const h=esc(BD?pick(BD.no):pick(L.subject==='math'?NO_MATH:NO));fb.className='fb no';
       fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,false)}<div><strong>${h}</strong>${msg||''}</div></div>`:`<strong>${h}</strong>${msg||''}`;},
     solved(first,explain,head){P.stars[key]=Math.max(P.stars[key]||0,first?1:0);save(L.id);
+      const src=st.src||(st.where?`課文${st.where}`:''),srcHtml=src?`<span class="src">出處：${esc(src)}</span>`:'';
       const h=head?esc(head):(first?'★ ':'')+esc(BD?pick(BD.ok):pick(OK));fb.className='fb ok';
-      fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,!head)}<div><strong>${h}</strong>${esc(explain||'')}</div></div>`:`<strong>${h}</strong>${esc(explain||'')}`;
+      fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,!head)}<div><strong>${h}</strong>${esc(explain||'')}${srcHtml}</div></div>`:`<strong>${h}</strong>${esc(explain||'')}${srcHtml}`;
       next.hidden=false;next.focus({preventScroll:true});}};
   next.onclick=()=>{if(si+1<lv.steps.length){level(li,si+1);toTop();}else{P.done[lv.id]=true;save(L.id);levelDone(li);toTop();}};
   (STEP[st.type]||stepUnknown)(st,body,ctx);
