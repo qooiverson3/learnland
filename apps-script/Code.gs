@@ -5,15 +5,23 @@
  * 分頁：
  *   _db       原始資料（請勿手動修改）：path、json、updatedAt
  *   進度總表  每位冒險者每一課一列
- *   作答明細  每一題一列：第一次就答對？開放題寫了什麼
+ *   作答明細  每一題一列：第一次就答對？作答秒數、是不是太快就答錯、重考有沒有答對、開放題寫了什麼
+ *   測驗紀錄  每一次隨堂測驗一列（每課保留最近 5 次）
  */
-const DB = '_db', SUM = '進度總表', DETAIL = '作答明細';
+const DB = '_db', SUM = '進度總表', DETAIL = '作答明細', QUIZ = '測驗紀錄';
+const SUM_HEAD = ['冒險者', '課程', '第一次就答對', '已作答題數', '過關關數', '開放題回答數', '更新時間', 'pid',
+  '隨堂測驗最佳', '隨堂測驗最近', '測驗完成次數', '測驗開始次數', '太快答錯題數'];
+const DETAIL_HEAD = ['冒險者', '課程', '關卡', '題目', '第一次就答對', '開放題回答', '更新時間', 'pid',
+  '第一次作答秒數', '太快就答錯', '重考答對'];
+const QUIZ_HEAD = ['冒險者', '課程', '測驗時間', '答對', '題數', '答對率', '花費秒數', '答錯的題目', 'pid'];
 const SEG = /^[A-Za-z0-9_\-.~:@+]{1,200}$/;
 
 function sheet_(name, header) {
   const ss = SpreadsheetApp.getActive();
   let sh = ss.getSheetByName(name);
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(header); sh.setFrozenRows(1); }
+  else if (sh.getLastColumn() < header.length || sh.getRange(1, header.length).getValue() !== header[header.length - 1])
+    sh.getRange(1, 1, 1, header.length).setValues([header]); // 舊版表頭補上新欄位
   return sh;
 }
 function out_(o) {
@@ -91,22 +99,34 @@ function summarize_(pid, lid, d, v, now) {
   const stars = d.stars || {}, done = d.done || {}, ans = d.answers || {};
   const firstRight = Object.keys(stars).filter(k => stars[k]).length;
 
-  const sum = sheet_(SUM, ['冒險者', '課程', '第一次就答對', '已作答題數', '過關關數', '開放題回答數', '更新時間', 'pid']);
+  const secs = d.secs || {}, rush = d.rush || {}, retry = d.retry || {}, quiz = d.quiz || {};
+  const score = q => q && q.n ? q.right + '／' + q.n : ''; // 全形斜線，避免試算表當成日期
+
+  const sum = sheet_(SUM, SUM_HEAD);
   const sv = sum.getDataRange().getValues();
-  const row = [name, lid, firstRight, Object.keys(stars).length, Object.keys(done).filter(k => done[k]).length, Object.keys(ans).length, now, pid];
+  const row = [name, lid, firstRight, Object.keys(stars).length, Object.keys(done).filter(k => done[k]).length, Object.keys(ans).length, now, pid,
+    score(quiz.best), score(quiz.last), quiz.times || 0, quiz.started || 0, Object.keys(rush).filter(k => rush[k]).length];
   let r = -1;
   for (let i = 1; i < sv.length; i++) if (sv[i][7] === pid && sv[i][1] === lid) { r = i + 1; break; }
   if (r > 0) sum.getRange(r, 1, 1, row.length).setValues([row]); else sum.appendRow(row);
 
-  const det = sheet_(DETAIL, ['冒險者', '課程', '關卡', '題目', '第一次就答對', '開放題回答', '更新時間', 'pid']);
-  const dv = det.getDataRange().getValues();
-  const keep = [dv[0]];
-  for (let i = 1; i < dv.length; i++) if (!(dv[i][7] === pid && dv[i][1] === lid)) keep.push(dv[i]);
-  const keys = Array.from(new Set(Object.keys(stars).concat(Object.keys(ans)))).sort();
-  keys.forEach(k => {
+  rewrite_(sheet_(DETAIL, DETAIL_HEAD), DETAIL_HEAD, 7, 1, pid, lid, Array.from(new Set(Object.keys(stars).concat(Object.keys(ans)))).sort().map(k => {
     const parts = k.split('/');
-    keep.push([name, lid, parts[0], parts[1] || '', k in stars ? (stars[k] ? '是' : '否') : '', safe_(ans[k] || ''), now, pid]);
-  });
-  det.clearContents();
-  det.getRange(1, 1, keep.length, keep[0].length).setValues(keep);
+    return [name, lid, parts[0], parts[1] || '', k in stars ? (stars[k] ? '是' : '否') : '', safe_(ans[k] || ''), now, pid,
+      k in secs ? secs[k] : '', rush[k] ? '是' : '', k in retry ? (retry[k] ? '是' : '否') : ''];
+  }));
+
+  rewrite_(sheet_(QUIZ, QUIZ_HEAD), QUIZ_HEAD, 8, 1, pid, lid, (quiz.log || []).map(q =>
+    [name, lid, new Date(q.at), q.right, q.n, q.n ? Math.round(q.right / q.n * 100) + '%' : '', q.secs || '', (q.wrong || []).join('、'), pid]));
+}
+
+// 把某位冒險者某一課的列整個換成新的，其他人的列保留；舊列補齊到新表頭的欄數
+function rewrite_(sh, head, pidCol, lidCol, pid, lid, rows) {
+  const v = sh.getDataRange().getValues();
+  const fit = r => { r = r.slice(0, head.length); while (r.length < head.length) r.push(''); return r; };
+  const keep = [head];
+  for (let i = 1; i < v.length; i++) if (!(v[i][pidCol] === pid && v[i][lidCol] === lid)) keep.push(fit(v[i]));
+  rows.forEach(r => keep.push(fit(r)));
+  sh.clearContents();
+  sh.getRange(1, 1, keep.length, head.length).setValues(keep);
 }

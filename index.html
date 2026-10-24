@@ -174,6 +174,16 @@ textarea{min-height:110px;resize:vertical}
 .fb.no{background:var(--bad-soft);border-left:5px solid var(--bad)}
 .fb strong{display:block;font-size:19px}
 .fb .src{display:block;margin-top:8px;padding-top:8px;border-top:2px dashed color-mix(in srgb,currentColor 18%,transparent);font-family:var(--f-ui);font-size:14px;color:var(--muted)}
+.fb .ans{display:block;margin:6px 0;font-weight:700}
+.fb .warn{display:block;margin:6px 0;color:var(--bad);font-weight:700}
+.fb .again{display:block;margin-top:8px;font-family:var(--f-ui);font-size:15px;color:var(--jade)}
+.locked{pointer-events:none}
+.locked .row,.locked .keypad,.locked .pool-label,.locked #num-help{display:none}
+.retest{margin:0;padding:8px 14px;border-radius:16px;background:var(--slip);color:var(--slip-ink);font-family:var(--f-ui);font-size:15px;font-weight:600}
+.cta-btns{display:flex;gap:10px;flex-wrap:wrap}
+.review{width:100%;text-align:left}
+.review ul{margin:6px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:10px}
+.review li span{display:block;color:var(--muted);font-size:15px}
 .done-card{align-items:center;text-align:center;padding-block:36px}
 .stamp{width:120px;height:120px;border:5px solid var(--seal);border-radius:14px;display:grid;place-items:center;color:var(--seal);font-size:66px;font-weight:700;transform:rotate(-8deg);animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stamp{from{transform:scale(2.2) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
@@ -342,7 +352,7 @@ async function login(raw){
     try{
       Store.pid=await claimAccount(key,name);
       const snap=await Store.db.collection('players/'+Store.pid+'/lessons').get();
-      snap.docs.forEach(d=>{const x=d.data()||{};Store.progress[d.id]={stars:{...(x.stars||{})},done:{...(x.done||{})},answers:{...(x.answers||{})}};});
+      snap.docs.forEach(d=>{const x=d.data()||{};Store.progress[d.id]={stars:{...(x.stars||{})},done:{...(x.done||{})},answers:{...(x.answers||{})},secs:{...(x.secs||{})},rush:{...(x.rush||{})},retry:{...(x.retry||{})}};if(x.quiz)Store.progress[d.id].quiz=x.quiz;});
       Store.mode='cloud';
     }catch(e){console.warn('cloud login failed',e);Store.mode='local';Store.cloudNote=true;}
   }else Store.mode='local';
@@ -423,12 +433,16 @@ async function goLesson(id){
 }
 const nextLevel=L=>L.levels.findIndex(lv=>!lp(L.id).done[lv.id]);
 function renderLessonList(){
-  const L=NAV.lesson,P=lp(L.id),all=nextLevel(L)<0;
-  $('below').innerHTML=`<p class="intro">${esc(L.source||'')}　點建築物闖關。每過一關，屋頂會插上一面印章旗；第一次就答對可以得到一顆星。</p>
+  const L=NAV.lesson,P=lp(L.id),all=nextLevel(L)<0,b=quizBest(P),n=L.levels.length,rw=L.reward?`「${esc(L.reward.title)}」`:'';
+  const msg=!all?`完成全部 ${n} 關後，參加隨堂測驗${rw?`，就能領取${rw}`:''}。`
+    :b?`隨堂測驗最佳成績 ${b.right} / ${b.n}${P.quiz.times>1?`（考過 ${P.quiz.times} 次）`:''}${rw?`，可以領取${rw}`:''}。`
+    :`全部 ${n} 關都過了！來一場隨堂測驗（每題只能作答一次）${rw?`，就能領取${rw}`:''}。`;
+  $('below').innerHTML=`<p class="intro">${esc(L.source||'')}　點建築物闖關。每過一關，屋頂會插上一面印章旗；第一次就答對可以得到一顆星，答錯的題目會在那一關最後再考一次。</p>
     <div class="list">${L.levels.map((lv,i)=>{const got=lv.steps.reduce((n,st)=>n+(P.stars[lv.id+'/'+st.id]||0),0);
       return `<button class="item ${P.done[lv.id]?'done':''}" data-l="${i}"><span class="big">${esc(lv.seal)}</span><span><b>${esc(lv.place)}・${esc(lv.title)}</b><small>第${zhNum(i+1)}關・${esc(lv.tag)}・${P.done[lv.id]?`★${got}/${lv.steps.length}`:`${lv.steps.length} 題`}</small></span></button>`}).join('')}</div>
-    ${L.reward?`<div class="cta"><span>${all?`全部 ${L.levels.length} 關都過了，快去領「${esc(L.reward.title)}」！`:`完成全部 ${L.levels.length} 關，就能領取「${esc(L.reward.title)}」。`}</span><button class="btn red" id="to-cert" ${all?'':'disabled'}>領取獎狀</button></div>`:''}`;
+    <div class="cta"><span>${msg}</span><span class="cta-btns"><button class="btn ${b?'ghost':'red'}" id="to-quiz" ${all?'':'disabled'}>${b?'再測一次':'隨堂測驗'}</button>${L.reward&&b?`<button class="btn red" id="to-cert">領取獎狀</button>`:''}</span></div>`;
   $('below').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>enterLevel(+b.dataset.l));
+  $('to-quiz').onclick=quizStart;
   const c=$('to-cert');if(c)c.onclick=()=>{const at=L.levels.findIndex(lv=>lv.id===L.reward.at);G&&at>=0?G.visitBy(p=>p.idx===at,cert):cert();};
 }
 function enterLevel(li){if(G)G.visitBy(p=>p.idx===li,()=>level(li,0));else level(li,0);}
@@ -443,31 +457,90 @@ function closeSheet(fly){if(sheet.hidden)return;sheet.hidden=true;document.body.
   if(NAV.view==='lesson'){hud();renderLessonList();if(G){G.refresh();if(fly)G.home();}}}
 const toTop=()=>sheet.scrollTo({top:0,behavior:reduced?'auto':'smooth'});
 
-function level(li,si){
+/* A run is one pass through a level or the lesson quiz. Answering wrong ends the question at once: the child
+   sees the right answer and the explanation (the "next" button waits a few seconds so it gets read), and in a
+   level the question comes back at the end of the queue with its options reshuffled. The star and the answer
+   time are recorded only on the very first attempt ever, so replays cannot earn stars back.
+   The quiz draws up to QUIZ_N questions from the whole lesson, one attempt each; its best score sets the
+   certificate rank. Answering wrong faster than the text could be read counts as a rush. */
+const RUN={cur:null},QUIZ_N=10;
+const quizBest=P=>P.quiz&&P.quiz.best;
+function shuffleOpts(st){if(st.type!=='mc')return st;const p=shuffleDiff(st.opts.map((_,i)=>i));
+  return Object.assign({},st,{opts:p.map(i=>st.opts[i]),ans:Array.isArray(st.ans)?st.ans.map(a=>p.indexOf(a)):p.indexOf(st.ans)});}
+function answerHtml(st){const t=st.type,u=st.unit?' '+esc(st.unit):'';
+  if(t==='mc')return [].concat(st.ans).map(i=>esc(st.opts[i])).join('、');
+  if(t==='order')return st.items.map(x=>esc(typeof x==='string'?x:x.t)).join(' → ');
+  if(t==='match')return st.pairs.map(p=>`<br>${esc(p[0])} — ${esc(p[1])}`).join('');
+  if(t==='cloze')return esc(st.text).replace(/\[(.+?)\]/g,'<b>「$1」</b>');
+  if(t==='num'){if(st.set)return esc(st.ans.join('、'))+u;if(st.text)return esc(st.text).replace(/\[(.+?)\]/g,'<b>$1</b>');return esc([].concat(st.ans)[0])+u;}
+  return '';}
+function minRead(st){const txt=[st.q,st.quote,st.text,...(st.opts||[]),...(st.items||[]).map(x=>typeof x==='string'?x:x.t),...(st.pairs||[]).flat()].filter(Boolean).join('');
+  return Math.min(8,Math.max(2.5,[...txt].length/8));}
+function lockBody(body,st){body.classList.add('locked');const off=()=>body.querySelectorAll('button,input,textarea').forEach(x=>{x.disabled=true;});off();setTimeout(off,0);
+  if(st.type==='mc')body.querySelectorAll('.opt').forEach(b=>{const r=[].concat(st.ans).includes(+b.dataset.i);if(r){b.classList.remove('picked');b.classList.add('right');}else if(b.classList.contains('picked')){b.classList.remove('picked');b.classList.add('wrong');}});}
+function holdNext(btn,secs,label){btn.hidden=false;btn.disabled=true;let s=secs;
+  const tick=()=>{if(!btn.isConnected)return;if(s<=0){btn.disabled=false;btn.textContent=label;btn.focus({preventScroll:true});return;}btn.textContent=`${label}（${s}）`;s--;setTimeout(tick,1000);};tick();}
+
+function level(li){const lv=NAV.lesson.levels[li];RUN.cur={kind:'level',li,queue:lv.steps.map((_,si)=>({li,si,re:false})),pos:0,rush:0};play();}
+function quizStart(){
+  const L=NAV.lesson,P=lp(L.id);
+  let pools=shuffle(L.levels.map((lv,li)=>shuffle(lv.steps.map((st,si)=>({li,si,re:false,open:st.type==='open'})).filter(x=>!x.open))).filter(p=>p.length));
+  const total=pools.reduce((n,p)=>n+p.length,0),N=Math.min(QUIZ_N,total),pick=[];
+  if(!N){toast('這一課沒有可以測驗的題目。');return;}
+  while(pick.length<N){pools=pools.filter(p=>p.length);for(const p of pools){if(pick.length>=N)break;const x=p.pop();pick.push({li:x.li,si:x.si,re:false});}}
+  const q=P.quiz||(P.quiz={times:0,started:0,log:[]});q.started=(q.started||0)+1;save(L.id);
+  RUN.cur={kind:'quiz',queue:shuffle(pick),pos:0,rush:0,right:0,wrong:[],t0:Date.now()};play();toTop();}
+
+function play(){
   openSheet();
-  const L=NAV.lesson,lv=L.levels[li],st=lv.steps[si],P=lp(L.id),BD=buddyOf(L.subject);
+  const R=RUN.cur,L=NAV.lesson,P=lp(L.id),BD=buddyOf(L.subject),quiz=R.kind==='quiz';
+  ['secs','rush','retry'].forEach(k=>{P[k]=P[k]||{};});
+  const it=R.queue[R.pos],lv=L.levels[it.li],st0=lv.steps[it.si],key=lv.id+'/'+st0.id,st=(it.re||quiz)?shuffleOpts(st0):st0;
+  const scene=esc(L.scene&&L.scene.name||'地圖');
+  const title=quiz?`<h2><small>隨堂測驗・每題只能作答一次</small>測・${esc(L.title)}</h2>`
+    :`<h2><small>第${zhNum(it.li+1)}關・${esc(lv.place)}</small>${esc(lv.seal)}・${esc(lv.title)}</h2>`;
   app.innerHTML=`
-    <div class="bar"><button class="back" id="back">← 回到${esc(L.scene&&L.scene.name||'地圖')}</button><h2><small>第${zhNum(li+1)}關・${esc(lv.place)}</small>${esc(lv.seal)}・${esc(lv.title)}</h2>
-      <span class="dots">${lv.steps.map((_,i)=>`<i class="${i<=si?'on':''}"></i>`).join('')}</span><span class="prog">${si+1}/${lv.steps.length}</span></div>
+    <div class="bar"><button class="back" id="back">← 回到${scene}</button>${title}
+      <span class="dots">${R.queue.map((_,i)=>`<i class="${i<=R.pos?'on':''}"></i>`).join('')}</span><span class="prog">${R.pos+1}/${R.queue.length}</span></div>
     <section class="card">
-      ${si===0&&lv.intro?(BD?`<div class="say">${buddySvg(BD.id,64,false)}<p class="bubble"><b>${esc(BD.name)}</b>${esc(lv.intro)}</p></div>`:`<p class="lvl-intro">${esc(lv.intro)}</p>`):''}
+      ${!quiz&&R.pos===0&&lv.intro?(BD?`<div class="say">${buddySvg(BD.id,64,false)}<p class="bubble"><b>${esc(BD.name)}</b>${esc(lv.intro)}</p></div>`:`<p class="lvl-intro">${esc(lv.intro)}</p>`):''}
+      ${quiz&&R.pos===0?`<p class="retest">隨堂測驗開始！題目從整課抽出來，每題只能作答一次，答錯就直接看正確答案。</p>`:''}
+      ${it.re?`<p class="retest">剛才答錯的題目，再考一次（選項順序換過了）</p>`:''}
       <div id="body"></div><div class="fb" id="fb" aria-live="polite"></div>
-      <div class="row"><button class="btn" id="next" hidden>${si+1<lv.steps.length?'下一題 →':'過關！'}</button></div>
+      <div class="row"><button class="btn" id="next" hidden></button></div>
     </section>`;
   $('back').onclick=()=>closeSheet(true);
-  const body=$('body'),fb=$('fb'),next=$('next'),key=lv.id+'/'+st.id;
+  const body=$('body'),fb=$('fb'),next=$('next'),t0=performance.now();let first=null,over=false;
+  const label=()=>R.pos+1<R.queue.length?'下一題 →':(quiz?'看成績':'過關！');
+  const src=st.src||(st.where?`課文${st.where}`:''),srcHtml=src?`<span class="src">出處：${esc(src)}</span>`:'';
+  const say=(cls,inner,happy)=>{fb.className='fb '+cls;fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,happy)}<div>${inner}</div></div>`:inner;};
+  function attempt(ok){if(first)return first;
+    const secs=Math.round((performance.now()-t0)/100)/10,fast=!ok&&st.type!=='open'&&secs<minRead(st0);first={ok,secs,fast};
+    if(!quiz&&!it.re&&!(key in P.stars)){P.stars[key]=ok?1:0;P.secs[key]=secs;if(fast)P.rush[key]=1;}
+    R.rush=fast?R.rush+1:0;return first;}
   const ctx={key,lessonId:L.id,
-    wrong(msg){const h=esc(BD?pick(BD.no):pick(L.subject==='math'?NO_MATH:NO));fb.className='fb no';
-      fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,false)}<div><strong>${h}</strong>${msg||''}</div></div>`:`<strong>${h}</strong>${msg||''}`;},
-    solved(first,explain,head){P.stars[key]=Math.max(P.stars[key]||0,first?1:0);save(L.id);
-      const src=st.src||(st.where?`課文${st.where}`:''),srcHtml=src?`<span class="src">出處：${esc(src)}</span>`:'';
-      const h=head?esc(head):(first?'★ ':'')+esc(BD?pick(BD.ok):pick(OK));fb.className='fb ok';
-      fb.innerHTML=BD?`<div class="fbrow">${buddySvg(BD.id,48,!head)}<div><strong>${h}</strong>${esc(explain||'')}${srcHtml}</div></div>`:`<strong>${h}</strong>${esc(explain||'')}${srcHtml}`;
-      next.hidden=false;next.focus({preventScroll:true});}};
-  next.onclick=()=>{if(si+1<lv.steps.length){level(li,si+1);toTop();}else{P.done[lv.id]=true;save(L.id);levelDone(li);toTop();}};
+    wrong(){if(over)return;over=true;const a=attempt(false);lockBody(body,st);
+      const again=!quiz&&!it.re;if(again)R.queue.push({li:it.li,si:it.si,re:true});
+      if(quiz)R.wrong.push(key);if(it.re)P.retry[key]=0;save(L.id);
+      const calm=R.rush>=2;if(calm)R.rush=0;
+      const head=quiz?'這題答錯了':it.re?'還是不對，沒關係，看清楚正確答案':'答錯了，先看看正確答案';
+      say('no',`<strong>${esc(head)}</strong>`
+        +(calm?'<span class="warn">連續好幾題都很快就答錯了。休息一下、深呼吸，再慢慢讀題。</span>':a.fast?'<span class="warn">太快作答囉！先把題目和每個選項讀完，再決定答案。</span>':'')
+        +`<span class="ans">正確答案：${answerHtml(st)}</span>${esc(st.explain||'')}${srcHtml}`
+        +(again?'<span class="again">這一題會在這一關的最後再考一次，選項順序會換喔。</span>':''),false);
+      holdNext(next,calm?10:a.fast?8:4,label());},
+    solved(_first,explain,head){if(over)return;over=true;const a=attempt(_first!==false);
+      if(quiz)R.right++;if(it.re)P.retry[key]=1;save(L.id);
+      const star=!quiz&&!it.re&&a.ok&&P.stars[key]===1;
+      const h=head?esc(head):quiz?'答對了！':it.re?'重考答對了，這次記住了！':(star?'★ ':'')+esc(BD?pick(BD.ok):pick(OK));
+      say('ok',`<strong>${h}</strong>${esc(explain||'')}${srcHtml}`,!head);
+      next.hidden=false;next.textContent=label();next.focus({preventScroll:true});}};
+  next.onclick=()=>{R.pos++;if(R.pos<R.queue.length){play();toTop();return;}
+    if(quiz)quizDone();else{P.done[lv.id]=true;save(L.id);levelDone(it.li);}toTop();};
   (STEP[st.type]||stepUnknown)(st,body,ctx);
 }
 function stepUnknown(st,body,ctx){body.innerHTML=`<p>這一題的題型「${esc(st.type)}」還沒有支援，先跳過吧。</p>`;ctx.solved(false,'');}
+
 function qHead(st){let h='';
   if(st.who){const lian=st.who==='lian';h+=`<div class="who"><span class="avatar ${st.who}">${lian?'廉':'藺'}</span><p class="act"><b>${lian?'廉頗':'藺相如'}</b>：${esc(st.act)}</p></div>`;}
   if(st.quote)h+=`<p class="quote">${esc(st.quote)}</p>`;return h+`<p class="q">${esc(st.q)}</p>`;}
@@ -615,20 +688,43 @@ function levelDone(li){
   const L=NAV.lesson,lv=L.levels[li],P=lp(L.id),got=lv.steps.reduce((n,st)=>n+(P.stars[lv.id+'/'+st.id]||0),0),n=nextLevel(L);
   if(G)G.refresh();
   const BD=buddyOf(L.subject);
+  const end=quizBest(P)?(L.reward?`<button class="btn red" id="d-cert">領取獎狀</button>`:''):`<button class="btn red" id="d-quiz">參加隨堂測驗 →</button>`;
   app.innerHTML=`<section class="card done-card"><div class="done-art"><div class="stamp" aria-hidden="true">${esc(lv.seal)}</div>${BD?buddySvg(BD.id,104,true):''}</div>
-    <h2>${esc(lv.place)}　過關！</h2><p class="lvl-intro">${BD?`${esc(BD.name)}：${esc(pick(BD.ok))}<br>`:''}這一關得到 <span class="star">★</span> ${got} / ${lv.steps.length}，屋頂插上了印章旗。</p>
+    <h2>${esc(lv.place)}　過關！</h2><p class="lvl-intro">${BD?`${esc(BD.name)}：${esc(pick(BD.ok))}<br>`:''}這一關得到 <span class="star">★</span> ${got} / ${lv.steps.length}，屋頂插上了印章旗。${n<0&&!quizBest(P)?'<br>全部關卡都過了！最後來一場隨堂測驗，看看你是不是真的學會了。':''}</p>
     <div class="row" style="justify-content:center"><button class="btn ghost" id="d-home">回到${esc(L.scene&&L.scene.name||'地圖')}</button>
-    ${n>=0?`<button class="btn" id="d-next">前往${esc(L.levels[n].place)} →</button>`:(L.reward?`<button class="btn red" id="d-cert">領取獎狀</button>`:'')}</div></section>`;
+    ${n>=0?`<button class="btn" id="d-next">前往${esc(L.levels[n].place)} →</button>`:end}</div></section>`;
   $('d-home').onclick=()=>closeSheet(true);
   const nx=$('d-next');if(nx)nx.onclick=()=>{closeSheet(false);enterLevel(n);};
   const c=$('d-cert');if(c)c.onclick=cert;
+  const q=$('d-quiz');if(q)q.onclick=quizStart;
+}
+function quizDone(){
+  const R=RUN.cur,L=NAV.lesson,P=lp(L.id),n=R.queue.length,BD=buddyOf(L.subject);
+  const q=P.quiz||(P.quiz={times:0,started:1,log:[]});q.times=(q.times||0)+1;
+  const rec={at:Date.now(),right:R.right,n,secs:Math.round((Date.now()-R.t0)/1000),wrong:R.wrong};
+  q.last=rec;if(!q.best||rec.right/rec.n>q.best.right/q.best.n)q.best={at:rec.at,right:rec.right,n};
+  q.log=[...(q.log||[]),rec].slice(-5);save(L.id);
+  const pct=rec.right/n;
+  const miss=R.wrong.map(k=>{const [lid,sid]=k.split('/'),lv=L.levels.find(x=>x.id===lid),st=lv&&lv.steps.find(x=>x.id===sid);
+    return st?`<li><b>${esc(st.q)}</b><span>正確答案：${answerHtml(st)}</span></li>`:'';}).join('');
+  app.innerHTML=`<section class="card done-card"><div class="done-art"><div class="stamp" aria-hidden="true">測</div>${BD?buddySvg(BD.id,104,pct>=.7):''}</div>
+    <h2>隨堂測驗：答對 ${rec.right} / ${n} 題</h2>
+    <p class="lvl-intro">${pct>=.9?'太厲害了，這一課你真的學會了！':pct>=.7?'很不錯！把答錯的題目再看一次。':'還有一些地方不太熟，回去看看講義，再挑戰一次吧。'}
+      ${q.times>1?`<br>這是第 ${q.times} 次測驗，最佳成績 ${q.best.right} / ${q.best.n}。`:''}</p>
+    ${miss?`<div class="review"><p class="pool-label">答錯的題目</p><ul>${miss}</ul></div>`:''}
+    <div class="row" style="justify-content:center"><button class="btn ghost" id="d-home">回到${esc(L.scene&&L.scene.name||'地圖')}</button>
+      <button class="btn ghost" id="q-again">再測一次</button>${L.reward?`<button class="btn red" id="d-cert">領取獎狀</button>`:''}</div></section>`;
+  $('d-home').onclick=()=>closeSheet(true);$('q-again').onclick=quizStart;
+  const c=$('d-cert');if(c)c.onclick=cert;
 }
 function cert(){
-  openSheet();const L=NAV.lesson,R=L.reward,s=lessonStars(L.id),r=s/lessonTotal(L);
+  const L=NAV.lesson,R=L.reward,P=lp(L.id),b=quizBest(P);
+  if(!b)return quizStart();
+  openSheet();const s=lessonStars(L.id),r=b.right/b.n;
   const rank=(R.ranks.find(([t])=>r>=t)||R.ranks[R.ranks.length-1])[1];
   app.innerHTML=`<div class="bar"><button class="back" id="back">← 回到${esc(L.scene&&L.scene.name||'地圖')}</button></div>
     <section class="edict">${buddyOf(L.subject)?`<div class="cert-buddy">${buddySvg(buddyOf(L.subject).id,96,true)}</div>`:''}<h2>${esc(R.title)}</h2><p>${esc(R.lead||'特頒此令，嘉獎小史官')}</p><div><span class="name">${esc(Store.name)}</span></div>
-      <p>${esc(R.body)}，${L.levels.length} 關全部過關，<br>共得 <b>★ ${s}</b> 顆，${esc(R.grant||'特封為')}</p><div class="rank">${esc(rank)}</div>
+      <p>${esc(R.body)}，${L.levels.length} 關全部過關，共得 <b>★ ${s}</b> 顆，<br>隨堂測驗答對 <b>${b.right} / ${b.n}</b> 題，${esc(R.grant||'特封為')}</p><div class="rank">${esc(rank)}</div>
       <p>${esc(R.blessing)}</p><div class="royal">${esc(R.seal)}</div></section>`;
   $('back').onclick=()=>closeSheet(true);
 }
