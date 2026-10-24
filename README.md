@@ -9,6 +9,7 @@
 | 路徑 | 用途 |
 | --- | --- |
 | `index.html` | 遊戲引擎（3D 地圖、題目、帳號、進度） |
+| `favicon.ico`、`apple-touch-icon.png`、`icon-512.png` | 網頁與手機主畫面圖示（紅色「學」字印章） |
 | `config.js` | Google Apps Script 網址與 TOKEN |
 | `db-gas.js` | 把進度讀寫到 Google 試算表 |
 | `content/catalog.json` | 學科與課程目錄 |
