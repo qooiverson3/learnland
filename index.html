@@ -184,6 +184,20 @@ textarea{min-height:110px;resize:vertical}
 .review{width:100%;text-align:left}
 .review ul{margin:6px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:10px}
 .review li span{display:block;color:var(--muted);font-size:15px}
+.chip .me-btn{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;font-size:14px}
+.me-count{display:inline-flex;align-items:center;gap:3px;color:var(--gold);font-weight:700}
+.linkbtn{background:none;border:none;padding:0;color:var(--jade);font:inherit;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.medal-get{display:flex;gap:12px;align-items:center;text-align:left;background:var(--slip);color:var(--slip-ink);border-radius:18px;padding:10px 14px}
+.medal-get b{display:block;font-size:18px}
+.me-head{display:flex;flex-direction:column;gap:6px}
+.me-head .name{font-size:28px;font-weight:700}
+.me-sub{margin:10px 0 0;font-size:20px}
+.medals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.medal{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:12px 10px}
+.medal:hover{border-color:var(--jade)}
+.medal b{font-size:17px;line-height:1.3}
+.medal small{font-family:var(--f-ui);font-size:13px;color:var(--muted)}
+.medal.locked b{color:var(--muted)}
 .done-card{align-items:center;text-align:center;padding-block:36px}
 .stamp{width:120px;height:120px;border:5px solid var(--seal);border-radius:14px;display:grid;place-items:center;color:var(--seal);font-size:66px;font-weight:700;transform:rotate(-8deg);animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stamp{from{transform:scale(2.2) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
@@ -352,7 +366,7 @@ async function login(raw){
     try{
       Store.pid=await claimAccount(key,name);
       const snap=await Store.db.collection('players/'+Store.pid+'/lessons').get();
-      snap.docs.forEach(d=>{const x=d.data()||{};Store.progress[d.id]={stars:{...(x.stars||{})},done:{...(x.done||{})},answers:{...(x.answers||{})},secs:{...(x.secs||{})},rush:{...(x.rush||{})},retry:{...(x.retry||{})}};if(x.quiz)Store.progress[d.id].quiz=x.quiz;});
+      snap.docs.forEach(d=>{const x=d.data()||{};Store.progress[d.id]={stars:{...(x.stars||{})},done:{...(x.done||{})},answers:{...(x.answers||{})},secs:{...(x.secs||{})},rush:{...(x.rush||{})},retry:{...(x.retry||{})}};if(x.quiz)Store.progress[d.id].quiz=x.quiz;if(x.medal)Store.progress[d.id].medal=x.medal;});
       Store.mode='cloud';
     }catch(e){console.warn('cloud login failed',e);Store.mode='local';Store.cloudNote=true;}
   }else Store.mode='local';
@@ -389,7 +403,7 @@ function hud(){
   }
   const lessonChip=NAV.view==='lesson'&&NAV.lesson?`<span class="chip"><span class="star">★</span> 本課 ${lessonStars(NAV.lesson.id)} / ${lessonTotal(NAV.lesson)}</span>`:'';
   $('hud').innerHTML=`<div><nav class="crumbs" aria-label="位置">${crumbs}</nav><h1>${title}</h1></div>
-    <div class="chips"><span class="chip">冒險者 <b>${esc(Store.name)}</b> <button id="switch">換人</button></span>
+    <div class="chips"><span class="chip"><button class="me-btn" data-me title="我的獎章">冒險者 <b>${esc(Store.name)}</b><span class="me-count">${medalSvg({tier:0,seal:''},13)}${medalCount()}</span></button> <button id="switch">換人</button></span>
     <span class="chip"><span class="star">★</span> ${totalStars()}</span>${lessonChip}<span class="chip" id="sync"></span></div>`;
   $('hud').querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>b.dataset.go==='world'?goWorld():goSubject(NAV.subject.id));
   $('switch').onclick=()=>{Object.keys(Store.timers).forEach(flush);showGate();};
@@ -465,6 +479,51 @@ const toTop=()=>sheet.scrollTo({top:0,behavior:reduced?'auto':'smooth'});
    certificate rank. Answering wrong faster than the text could be read counts as a rush. */
 const RUN={cur:null},QUIZ_N=10;
 const quizBest=P=>P.quiz&&P.quiz.best;
+/* ---- medals: one per lesson, earned together with its certificate (every level cleared + the quiz taken).
+   The tier follows the certificate rank reached by the best quiz score: first rank gold, second silver, the rest
+   bronze. It is stored in that lesson's progress (P.medal), so it syncs and shows on the player's medal page. ---- */
+const TIERS=[{id:'gold',name:'金'},{id:'silver',name:'銀'},{id:'bronze',name:'銅'}];
+const medalCount=()=>Object.values(Store.progress).filter(p=>p&&p.medal).length;
+function medalFor(L,P){const b=quizBest(P);if(!L.reward||!b)return null;const R=L.reward.ranks,r=b.right/b.n;
+  let i=R.findIndex(([t])=>r>=t);if(i<0)i=R.length-1;
+  return {tier:Math.min(i,2),rank:R[i][1],title:L.reward.title,seal:L.reward.seal,right:b.right,n:b.n};}
+/* records or upgrades the lesson's medal; returns {medal,upgrade} only when it is new or reaches a better tier */
+function awardMedal(L,P){const m=medalFor(L,P),old=P.medal;if(!m)return null;
+  if(old&&(old.tier<m.tier||(old.tier===m.tier&&old.right/old.n>=m.right/m.n)))return null;
+  const better=!old||m.tier<old.tier;P.medal=Object.assign(m,{at:better?Date.now():old.at});save(L.id);
+  return better?{medal:P.medal,upgrade:!!old}:null;}
+function medalSvg(m,s=72){
+  const k=m?TIERS[m.tier].id:'none',c={gold:['#f6cf4e','#b98316'],silver:['#e4e8ee','#8e98a3'],bronze:['#eaa875','#9c5a2b'],none:['#ece6dc','#c5bcae']}[k];
+  const lines=m?String(m.seal||'').split('\n').slice(0,2):['？'],fs=lines.length>1?13:22;
+  const txt=lines.map((t,i)=>`<text x="40" y="${62+(i-(lines.length-1)/2)*15}" font-size="${fs}" text-anchor="middle" dominant-baseline="middle" fill="${m?'#4a3410':'#9b9284'}" font-weight="700" font-family="LXGW WenKai TC,Kaiti TC,BiauKai,serif">${esc(t)}</text>`).join('');
+  return `<svg class="medal-svg" viewBox="0 0 80 96" width="${s}" height="${Math.round(s*1.2)}" aria-hidden="true">
+    <path d="M22 0h15l-5 36H17z" fill="${m?'#c04a35':'#d6cfc3'}"/><path d="M43 0h15l5 36H48z" fill="${m?'#2e7d6b':'#cbc3b6'}"/>
+    <circle cx="40" cy="62" r="31" fill="${c[1]}"/><circle cx="40" cy="62" r="26" fill="${c[0]}" stroke="${c[1]}" stroke-width="2" stroke-dasharray="3 3"/>${txt}</svg>`;}
+function medalNote(got){if(!got)return '';const m=got.medal;
+  return `<div class="medal-get">${medalSvg(m,56)}<div><b>${got.upgrade?'獎章升級了！':'獲得新獎章！'}</b>${esc(m.title)}・${TIERS[m.tier].name}獎章（${esc(m.rank)}）<br><button class="linkbtn" data-me>看我的獎章</button></div></div>`;}
+async function showMe(){
+  openSheet();
+  app.innerHTML=`<div class="bar"><button class="back" id="back">← 回去</button><h2><small>冒險者</small>我的獎章</h2></div><section class="card"><p class="lvl-intro">讀取中⋯⋯</p></section>`;
+  $('back').onclick=()=>closeSheet(false);
+  await Promise.all(CAT.subjects.flatMap(s=>s.lessons.map(e=>getLesson(e).catch(()=>null))));
+  if(sheet.hidden||!$('back'))return;
+  let total=0,cleared=0;const tiers=[0,0,0];
+  const subs=CAT.subjects.filter(s=>s.lessons.length).map(s=>{
+    const tiles=[...s.lessons].sort((a,b)=>gradeOrder(a.grade)-gradeOrder(b.grade)||a.no-b.no).map(e=>{
+      const L=LESSONS[e.id],P=lp(e.id);if(L&&!P.medal&&quizBest(P))awardMedal(L,P);
+      const m=P.medal;total++;if(L&&nextLevel(L)<0)cleared++;if(m)tiers[m.tier]++;
+      const done=L?L.levels.filter(lv=>P.done[lv.id]).length:0;
+      const status=m?`${TIERS[m.tier].name}獎章・${esc(m.rank)}<br>隨堂測驗最佳 ${m.right}／${m.n}`
+        :!L?'':done<L.levels.length?(done?`還差 ${L.levels.length-done} 關`:'還沒開始'):'關卡都過了，去考隨堂測驗';
+      return `<button class="medal ${m?'':'locked'}" data-e="${esc(e.id)}" data-got="${m?1:0}">${medalSvg(m,64)}<b>${esc(m?m.title:e.title)}</b><small>${esc(e.grade)} 第${zhNum(e.no)}課</small><small>${status}</small></button>`;}).join('');
+    return `<h3 class="me-sub">${esc(s.name)}・${esc(s.region)}</h3><div class="medals">${tiles}</div>`;}).join('');
+  const got=tiers[0]+tiers[1]+tiers[2];
+  app.querySelector('.card').outerHTML=`<section class="card"><div class="me-head"><span class="name">${esc(Store.name)}</span>
+      <p class="lvl-intro"><span class="star">★</span> ${totalStars()}　過關 ${cleared} / ${total} 課　獎章 ${got} 枚${got?`（金 ${tiers[0]}・銀 ${tiers[1]}・銅 ${tiers[2]}）`:''}</p>
+      <p class="lvl-intro">每一課全部過關、考完隨堂測驗，就能得到那一課的獎章。測驗成績越好，獎章越亮：金、銀、銅。重考考得更好，獎章會升級。</p></div>${subs}</section>`;
+  app.querySelectorAll('[data-e]').forEach(b=>b.onclick=async()=>{const id=b.dataset.e,got=b.dataset.got==='1';closeSheet(false);await goLesson(id);if(got&&NAV.lesson&&NAV.lesson.id===id)cert();});
+}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-me]');if(t){e.preventDefault();showMe();}});
 function shuffleOpts(st){if(st.type!=='mc')return st;const p=shuffleDiff(st.opts.map((_,i)=>i));
   return Object.assign({},st,{opts:p.map(i=>st.opts[i]),ans:Array.isArray(st.ans)?st.ans.map(a=>p.indexOf(a)):p.indexOf(st.ans)});}
 function answerHtml(st){const t=st.type,u=st.unit?' '+esc(st.unit):'';
@@ -703,14 +762,14 @@ function quizDone(){
   const q=P.quiz||(P.quiz={times:0,started:1,log:[]});q.times=(q.times||0)+1;
   const rec={at:Date.now(),right:R.right,n,secs:Math.round((Date.now()-R.t0)/1000),wrong:R.wrong};
   q.last=rec;if(!q.best||rec.right/rec.n>q.best.right/q.best.n)q.best={at:rec.at,right:rec.right,n};
-  q.log=[...(q.log||[]),rec].slice(-5);save(L.id);
+  q.log=[...(q.log||[]),rec].slice(-5);save(L.id);const got=awardMedal(L,P);
   const pct=rec.right/n;
   const miss=R.wrong.map(k=>{const [lid,sid]=k.split('/'),lv=L.levels.find(x=>x.id===lid),st=lv&&lv.steps.find(x=>x.id===sid);
     return st?`<li><b>${esc(st.q)}</b><span>正確答案：${answerHtml(st)}</span></li>`:'';}).join('');
   app.innerHTML=`<section class="card done-card"><div class="done-art"><div class="stamp" aria-hidden="true">測</div>${BD?buddySvg(BD.id,104,pct>=.7):''}</div>
     <h2>隨堂測驗：答對 ${rec.right} / ${n} 題</h2>
     <p class="lvl-intro">${pct>=.9?'太厲害了，這一課你真的學會了！':pct>=.7?'很不錯！把答錯的題目再看一次。':'還有一些地方不太熟，回去看看講義，再挑戰一次吧。'}
-      ${q.times>1?`<br>這是第 ${q.times} 次測驗，最佳成績 ${q.best.right} / ${q.best.n}。`:''}</p>
+      ${q.times>1?`<br>這是第 ${q.times} 次測驗，最佳成績 ${q.best.right} / ${q.best.n}。`:''}</p>${medalNote(got)}
     ${miss?`<div class="review"><p class="pool-label">答錯的題目</p><ul>${miss}</ul></div>`:''}
     <div class="row" style="justify-content:center"><button class="btn ghost" id="d-home">回到${esc(L.scene&&L.scene.name||'地圖')}</button>
       <button class="btn ghost" id="q-again">再測一次</button>${L.reward?`<button class="btn red" id="d-cert">領取獎狀</button>`:''}</div></section>`;
@@ -720,12 +779,13 @@ function quizDone(){
 function cert(){
   const L=NAV.lesson,R=L.reward,P=lp(L.id),b=quizBest(P);
   if(!b)return quizStart();
-  openSheet();const s=lessonStars(L.id),r=b.right/b.n;
+  openSheet();awardMedal(L,P);const s=lessonStars(L.id),r=b.right/b.n;
   const rank=(R.ranks.find(([t])=>r>=t)||R.ranks[R.ranks.length-1])[1];
   app.innerHTML=`<div class="bar"><button class="back" id="back">← 回到${esc(L.scene&&L.scene.name||'地圖')}</button></div>
     <section class="edict">${buddyOf(L.subject)?`<div class="cert-buddy">${buddySvg(buddyOf(L.subject).id,96,true)}</div>`:''}<h2>${esc(R.title)}</h2><p>${esc(R.lead||'特頒此令，嘉獎小史官')}</p><div><span class="name">${esc(Store.name)}</span></div>
       <p>${esc(R.body)}，${L.levels.length} 關全部過關，共得 <b>★ ${s}</b> 顆，<br>隨堂測驗答對 <b>${b.right} / ${b.n}</b> 題，${esc(R.grant||'特封為')}</p><div class="rank">${esc(rank)}</div>
-      <p>${esc(R.blessing)}</p><div class="royal">${esc(R.seal)}</div></section>`;
+      <p>${esc(R.blessing)}</p><div class="royal">${esc(R.seal)}</div></section>
+    ${P.medal?`<div class="medal-get">${medalSvg(P.medal,56)}<div><b>${TIERS[P.medal.tier].name}獎章已收進你的個人資料</b>重考考得更好，獎章會升級。<br><button class="linkbtn" data-me>看我的獎章</button></div></div>`:''}`;
   $('back').onclick=()=>closeSheet(true);
 }
 
