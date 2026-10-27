@@ -12,7 +12,8 @@
    ]},
   {"id": "sci", "name": "自然", "region": "森林島", "seal": "自", "theme": "forest", "buddy": "diandian",
    "lessons": [
-    {"id": "sci-5a-01", "grade": "5上", "no": 1, "title": "太陽與生活", "place": "陽光森林", "file": "content/sci-5a-01.json"}
+    {"id": "sci-5a-01", "grade": "5上", "no": 1, "title": "太陽與生活", "place": "陽光森林", "file": "content/sci-5a-01.json"},
+    {"id": "sci-5a-02", "grade": "5上", "no": 2, "title": "太陽的位置變化", "place": "日影森林", "file": "content/sci-5a-02.json"}
    ]},
   {"id": "math", "name": "數學", "region": "機關城", "seal": "數", "theme": "blocks",
    "buddy": "chichi",
