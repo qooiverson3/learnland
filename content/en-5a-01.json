@@ -1,0 +1,836 @@
+{
+ "id": "en-5a-01",
+ "subject": "en",
+ "grade": "5上",
+ "no": 1,
+ "title": "What Day Is Today?",
+ "source": "五上英語 Unit 1〈What Day Is Today?〉",
+ "scene": {
+  "template": "world-trip",
+  "name": "巴塞隆納"
+ },
+ "reward": {
+  "at": "trip-map",
+  "title": "西班牙旅行護照",
+  "seal": "巴塞\n隆納",
+  "body": "讀懂 Unit 1〈What Day Is Today?〉",
+  "lead": "特頒此證，嘉獎說得出星期幾的小小旅行家",
+  "grant": "榮獲",
+  "ranks": [
+   [
+    0.9,
+    "環遊世界小達人"
+   ],
+   [
+    0.7,
+    "英語小導遊"
+   ],
+   [
+    0,
+    "旅行新手"
+   ]
+  ],
+  "blessing": "願你帶著英語，勇敢走遍世界每個角落。"
+ },
+ "levels": [
+  {
+   "id": "park-guell",
+   "title": "孩子們在哪裡？",
+   "tag": "故事開場",
+   "seal": "園",
+   "place": "奎爾公園",
+   "intro": "Hola！歡迎來到西班牙的巴塞隆納。孩子們坐在彩色磁磚長椅上，正在翻旅遊書呢。",
+   "building": {
+    "type": "mosaic",
+    "banner": "園"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.7、p.8",
+     "q": "課本問 Where are the kids? 故事一開始，孩子們在哪裡？",
+     "opts": [
+      "聖家堂 the Sagrada Familia",
+      "奎爾公園 Park Güell",
+      "諾坎普球場 Nou Camp Stadium",
+      "台中的科博館"
+     ],
+     "ans": 1,
+     "explain": "p.8 右上角標著 Park Güell 奎爾公園。孩子們坐在彩色磁磚長椅上，手上拿著介紹西班牙的旅遊書。"
+    },
+    {
+     "id": "s2",
+     "type": "match",
+     "src": "英語課本 p.8–10、p.20",
+     "q": "把地點的英文和中文配一配。",
+     "pairs": [
+      [
+       "Park Güell",
+       "奎爾公園"
+      ],
+      [
+       "the Sagrada Familia",
+       "聖家堂"
+      ],
+      [
+       "Nou Camp Stadium",
+       "諾坎普球場"
+      ],
+      [
+       "Barcelona, Spain",
+       "巴塞隆納，西班牙"
+      ]
+     ],
+     "explain": "這一課的故事都發生在西班牙的巴塞隆納：先在奎爾公園，再去聖家堂，最後到諾坎普球場看足球。"
+    }
+   ]
+  },
+  {
+   "id": "book-tickets",
+   "title": "訂門票",
+   "tag": "看懂故事",
+   "seal": "票",
+   "place": "售票亭",
+   "intro": "旅遊書上的教堂好漂亮！大家決定去看看，先來訂門票吧。",
+   "building": {
+    "type": "ticket",
+    "label": "TICKETS"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "listen",
+     "src": "英語課本 p.8 Story Time ②",
+     "q": "聽一聽，選出你聽到的句子。",
+     "say": "OK. Let's book the tickets.",
+     "opts": [
+      "Let's go watch football.",
+      "Have a good time.",
+      "OK. Let's book the tickets.",
+      "Let's go here!"
+     ],
+     "ans": 2,
+     "explain": "Teddy 說完這句話，就拿出手機訂票。Read and Find 問 Teddy 在手機上做什麼？答案就是訂門票。"
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.8 單字欄",
+     "q": "book the tickets 的 book，在這裡是什麼意思？",
+     "opts": [
+      "預訂",
+      "書本",
+      "讀書",
+      "寫字"
+     ],
+     "ans": 0,
+     "explain": "book 平常是「書」，但 book the tickets 的 book 是「預訂」的意思，整句是「預訂門票」。"
+    },
+    {
+     "id": "s3",
+     "type": "order",
+     "src": "英語課本 p.8 Story Time ①～⑤",
+     "q": "把 Story Time 的對話照順序排好。",
+     "items": [
+      "Let's go here!",
+      "OK. Let's book the tickets.",
+      "What day is today?",
+      "It's Friday.",
+      "Friday. Done! Let's go!"
+     ],
+     "explain": "先說想去教堂，接著決定訂票；訂票要選日子，所以問今天星期幾。選好星期五就訂好了，done 是「完成」。"
+    }
+   ]
+  },
+  {
+   "id": "church",
+   "title": "好棒的教堂",
+   "tag": "生活用語",
+   "seal": "讚",
+   "place": "聖家堂",
+   "intro": "聖家堂好高好特別，旁邊還有吊車，因為它到現在都還在蓋呢！",
+   "building": {
+    "type": "cathedral",
+    "banner": "讚"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.9 ⑥",
+     "q": "大家看到高高的聖家堂，忍不住讚嘆。他們說了哪一句？",
+     "opts": [
+      "It's Friday.",
+      "Thank you.",
+      "It's awesome!",
+      "Good idea!"
+     ],
+     "ans": 2,
+     "explain": "awesome 是「令人讚嘆的」，It's awesome! 就是「好棒喔！」看到很厲害的東西可以這樣說。"
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.9 ⑦⑧ 單字欄",
+     "q": "在教堂裡，大家互相說 Hola.。hola 是什麼意思？",
+     "opts": [
+      "西班牙文的「嗨」",
+      "英文的「再見」",
+      "西班牙文的「謝謝」",
+      "英文的「好主意」"
+     ],
+     "ans": 0,
+     "explain": "hola 是西班牙文的「嗨」，和英文的 hi 一樣，是打招呼的話。"
+    },
+    {
+     "id": "s3",
+     "type": "listen",
+     "src": "英語課本 p.9 ⑨⑩ Daily Talk",
+     "q": "聽到這句話，你也很想去，最適合怎麼回答？",
+     "say": "Let's go watch football.",
+     "opts": [
+      "No, it isn't.",
+      "It's Friday.",
+      "Thank you.",
+      "Good idea!"
+     ],
+     "ans": 3,
+     "explain": "Let's go watch football. 是「我們去看足球吧！」同意別人的提議，可以說 Good idea!（好主意！）"
+    }
+   ]
+  },
+  {
+   "id": "game-day",
+   "title": "TGIF 球賽日",
+   "tag": "看懂故事",
+   "seal": "球",
+   "place": "諾坎普球場",
+   "intro": "球場外的看板寫著兩場比賽：星期三一場、星期五一場。今天到底是星期幾呢？",
+   "building": {
+    "type": "stadium",
+    "label": "FOOTBALL"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.10 ⑪⑫",
+     "q": "看板上有 WED. 和 FRI. 兩場比賽。有人問 Is it Wednesday today? 回答是什麼？",
+     "opts": [
+      "Yes, it is.",
+      "No, it isn't. It's Friday.",
+      "No, it isn't. It's Monday.",
+      "It's awesome!"
+     ],
+     "ans": 1,
+     "explain": "今天不是星期三，是星期五，所以回答 No, it isn't. It's Friday."
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.10 ⑬ 註解",
+     "q": "大家喊 TGIF! 為什麼這麼開心？",
+     "opts": [
+      "今天要去教堂",
+      "今天是星期三，比賽還沒開始",
+      "今天要訂門票",
+      "謝天謝地，今天是星期五！今天剛好有足球賽"
+     ],
+     "ans": 3,
+     "explain": "TGIF = Thank goodness it's Friday.（謝天謝地，今天是星期五）。星期五正好有比賽：There's a football game today."
+    },
+    {
+     "id": "s3",
+     "type": "mc",
+     "src": "英語課本 p.11 ⑰、p.20",
+     "q": "球飛進觀眾席，Rocky 一把接住了球。大家對她說什麼？",
+     "opts": [
+      "Good job!",
+      "Hola.",
+      "What day is it?",
+      "Have a good time."
+     ],
+     "ans": 0,
+     "explain": "Good job! 是「做得好！」稱讚別人表現很好時用。Reading Time 最後也說 Good job, Rocky!"
+    },
+    {
+     "id": "s4",
+     "type": "open",
+     "src": "英語課本 p.11 Think and Say",
+     "q": "Think and Say：Football is popular in Spain.（足球在西班牙很受歡迎。）What sport is popular in Taiwan? 你覺得台灣什麼運動最受歡迎？為什麼？",
+     "ideas": [
+      "Baseball is popular in Taiwan. 棒球很受歡迎，很多人會一起看比賽、幫球隊加油。",
+      "Basketball is popular in Taiwan. 學校和公園都有籃球場，下課常常有人在打。",
+      "先用英文說 ___ is popular in Taiwan.，再用你看過的比賽或生活經驗當理由。"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "days-week",
+   "title": "一週七天",
+   "tag": "星期單字",
+   "seal": "週",
+   "place": "星期屋",
+   "intro": "一個星期有七天。從 Sunday 開始，一天一天認識它們吧！",
+   "building": {
+    "type": "calendar",
+    "num": "12",
+    "label": "Sun.",
+    "color": "#c04a35"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "order",
+     "src": "英語課本 p.12–13 Days of the Week",
+     "q": "從星期日排到星期六。",
+     "items": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+     ],
+     "explain": "課本的月曆從 Sunday（星期日）開始。七天都是 -day 結尾，第一個字母一定大寫。"
+    },
+    {
+     "id": "s2",
+     "type": "match",
+     "src": "英語課本 p.12–13 Days of the Week",
+     "q": "把星期的英文和中文配一配。",
+     "pairs": [
+      [
+       "Monday",
+       "星期一"
+      ],
+      [
+       "Wednesday",
+       "星期三"
+      ],
+      [
+       "Thursday",
+       "星期四"
+      ],
+      [
+       "Saturday",
+       "星期六"
+      ],
+      [
+       "Sunday",
+       "星期日"
+      ]
+     ],
+     "explain": "Sunday 的 Sun 是太陽，就像星期日的「日」。"
+    },
+    {
+     "id": "s3",
+     "type": "match",
+     "src": "英語課本 p.12–14 月曆與轉盤",
+     "q": "月曆上常用縮寫。把縮寫和完整的單字配一配。",
+     "pairs": [
+      [
+       "Tue.",
+       "Tuesday"
+      ],
+      [
+       "Thu.",
+       "Thursday"
+      ],
+      [
+       "Wed.",
+       "Wednesday"
+      ],
+      [
+       "Fri.",
+       "Friday"
+      ]
+     ],
+     "explain": "縮寫是取前三個字母再加一點。Tue. 和 Thu. 都是 T 開頭，看第二個字母：u 是星期二，h 是星期四。"
+    },
+    {
+     "id": "s4",
+     "type": "listen",
+     "src": "英語課本 p.12 Listen, Say, and Number",
+     "q": "聽一聽，這是星期幾？",
+     "say": "Thursday",
+     "opts": [
+      "星期二",
+      "星期四",
+      "星期三",
+      "星期六"
+     ],
+     "ans": 1,
+     "explain": "Thursday 是星期四。它和 Tuesday（星期二）都是 T 開頭，聽的時候注意 Thurs- 的音。"
+    }
+   ]
+  },
+  {
+   "id": "what-day",
+   "title": "今天星期幾？",
+   "tag": "句型練習",
+   "seal": "幾",
+   "place": "購物商場",
+   "intro": "商場掛著大大的 SALE 海報。媽媽一時想不起來今天星期幾，來幫幫她！",
+   "building": {
+    "type": "shop",
+    "label": "SALE"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "cloze",
+     "src": "英語課本 p.12 Listen and Say",
+     "q": "把問星期幾的對話填完整。",
+     "text": "A: What [day] is [today]?　B: [It's] Friday.",
+     "extra": [
+      "time",
+      "color",
+      "Is"
+     ],
+     "explain": "問星期幾：What day is today?（也可以說 What day is it?）回答用 It's＋星期，例如 It's Friday."
+    },
+    {
+     "id": "s2",
+     "type": "listen",
+     "src": "英語課本 p.12 Listen and Check",
+     "q": "聽一聽，今天是星期幾？",
+     "say": "What day is it? It's Saturday.",
+     "opts": [
+      "星期日",
+      "星期五",
+      "星期四",
+      "星期六"
+     ],
+     "ans": 3,
+     "explain": "It's Saturday. 是「今天星期六」。Saturday 和 Sunday 都是 S 開頭，要聽清楚。"
+    }
+   ]
+  },
+  {
+   "id": "yes-no",
+   "title": "是星期一嗎？",
+   "tag": "Yes / No 回答",
+   "seal": "是",
+   "place": "博物館門口",
+   "intro": "博物館門口貼著 CLOSED。咦？今天是星期一嗎？",
+   "building": {
+    "type": "museum",
+    "label": "MUSEUM",
+    "closed": true
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.13",
+     "q": "如果今天真的是星期一，回答 Is it Monday today? 要說？",
+     "opts": [
+      "No, it is.",
+      "Yes, it isn't.",
+      "Yes, it is.",
+      "No, it isn't."
+     ],
+     "ans": 2,
+     "explain": "是的話回答 Yes, it is.；不是的話回答 No, it isn't.。Yes 配 is，No 配 isn't。"
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.13（isn't = is not）",
+     "q": "isn't 是哪兩個字縮在一起？",
+     "opts": [
+      "it is",
+      "is not",
+      "is no",
+      "it not"
+     ],
+     "ans": 1,
+     "explain": "isn't = is not。not 的 o 省略掉，用一撇（'）代替。"
+    },
+    {
+     "id": "s3",
+     "type": "mc",
+     "src": "英語課本 p.13 插圖",
+     "q": "博物館的牌子寫 Opening Hours: Tue.—Sun. 9:00–18:00。女孩說今天是星期一，所以博物館怎麼了？",
+     "opts": [
+      "今天早上 9 點開門",
+      "今天開到晚上 6 點",
+      "今天免費參觀",
+      "今天休館，沒有開"
+     ],
+     "ans": 3,
+     "explain": "Tue.—Sun. 是星期二到星期日開放，星期一不開，所以門口貼著 CLOSED。"
+    },
+    {
+     "id": "s4",
+     "type": "listen",
+     "src": "英語課本 p.13",
+     "q": "聽一聽，今天到底是星期幾？",
+     "say": "Is it Tuesday today? No, it isn't. It's Thursday.",
+     "opts": [
+      "星期二",
+      "星期三",
+      "星期四",
+      "星期五"
+     ],
+     "ans": 2,
+     "explain": "先問是不是星期二，回答 No, it isn't. It's Thursday.，所以今天是星期四。"
+    }
+   ]
+  },
+  {
+   "id": "what-q",
+   "title": "What 問問看",
+   "tag": "What＋名詞",
+   "seal": "問",
+   "place": "鐘樓",
+   "intro": "What 後面接不同的字，就能問不同的事。鐘樓上的時鐘正在滴答走。",
+   "building": {
+    "type": "clock",
+    "banner": "問"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "match",
+     "src": "英語課本 p.15 Grammar Focus",
+     "q": "把問句和回答配一配。",
+     "pairs": [
+      [
+       "What day is it?",
+       "It's Sunday."
+      ],
+      [
+       "What time is it?",
+       "It's 9:50."
+      ],
+      [
+       "What color is it?",
+       "It's blue."
+      ]
+     ],
+     "explain": "What day 問星期、What time 問時間、What color 問顏色。"
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.15 Read and Choose（改寫）",
+     "q": "A: What ___ is it?　B: It's red. 空格要填？",
+     "opts": [
+      "day",
+      "time",
+      "color"
+     ],
+     "ans": 2,
+     "explain": "red 是顏色，所以問 What color is it?"
+    },
+    {
+     "id": "s3",
+     "type": "listen",
+     "src": "英語課本 p.15 Grammar Focus",
+     "q": "聽一聽，現在幾點？",
+     "say": "What time is it? It's nine fifty.",
+     "opts": [
+      "9:50",
+      "9:15",
+      "5:09",
+      "9:05"
+     ],
+     "ans": 0,
+     "explain": "nine fifty 是 9 點 50 分，寫成 9:50。fifty（50）和 fifteen（15）聽起來很像，要聽清楚字尾。"
+    }
+   ]
+  },
+  {
+   "id": "long-e",
+   "title": "長母音 e",
+   "tag": "自然發音",
+   "seal": "音",
+   "place": "海邊樹屋",
+   "intro": "Pete the Bee 住在海邊的樹上，最愛喝茶。e_e、ee、ea 都唸長長的 /i/！",
+   "building": {
+    "type": "beach"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.16 Phonics",
+     "q": "下面哪些單字是用 ee 拼出長音 /i/？（可以選不只一個）",
+     "opts": [
+      "bee",
+      "tea",
+      "tree",
+      "Pete",
+      "sea"
+     ],
+     "ans": [
+      0,
+      2
+     ],
+     "explain": "bee、tree 是 ee；tea、sea 是 ea；Pete 是 e_e（e，加一個子音，再加 e）。"
+    },
+    {
+     "id": "s2",
+     "type": "match",
+     "src": "英語課本 p.16 Phonics",
+     "q": "把拼字規則和單字配一配。",
+     "pairs": [
+      [
+       "e_e",
+       "these"
+      ],
+      [
+       "ee",
+       "tree"
+      ],
+      [
+       "ea",
+       "sea"
+      ]
+     ],
+     "explain": "these 的 e_e、tree 的 ee、sea 的 ea，三種拼法都唸長音 /i/。"
+    },
+    {
+     "id": "s3",
+     "type": "cloze",
+     "src": "英語課本 p.17 Listen and Chant",
+     "q": "把 Pete the Bee 的韻文填完整。",
+     "text": "Pete the Bee drinks some [tea] in the [tree] by the [sea].",
+     "extra": [
+      "tray",
+      "pet",
+      "set"
+     ],
+     "explain": "tea 茶、tree 樹、sea 海，都有長音 /i/，唸起來很押韻。"
+    }
+   ]
+  },
+  {
+   "id": "listen-e",
+   "title": "耳朵大挑戰",
+   "tag": "聽音辨字",
+   "seal": "聽",
+   "place": "聽音小屋",
+   "intro": "這些單字長得很像，只差一點點。豎起耳朵，聽聽看是哪一個！",
+   "building": {
+    "type": "house",
+    "roof": "blue",
+    "banner": "聽"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "listen",
+     "src": "英語課本 p.17 Listen and Circle（改寫）",
+     "q": "聽一聽，選出你聽到的單字。",
+     "say": "Pete",
+     "opts": [
+      "pet",
+      "Pete"
+     ],
+     "ans": 1,
+     "explain": "Pete 字尾有 e，前面的 e 唸長音 /i/；pet（寵物）是短音。"
+    },
+    {
+     "id": "s2",
+     "type": "listen",
+     "src": "英語課本 p.17 Listen and Circle（改寫）",
+     "q": "聽一聽，選出你聽到的單字。",
+     "say": "fed",
+     "opts": [
+      "fed",
+      "feed"
+     ],
+     "ans": 0,
+     "explain": "fed 是短音；feed（餵）有 ee，唸長音 /i/。"
+    },
+    {
+     "id": "s3",
+     "type": "listen",
+     "src": "英語課本 p.17 Listen and Circle（改寫）",
+     "q": "聽一聽，選出你聽到的單字。",
+     "say": "seat",
+     "opts": [
+      "set",
+      "seat"
+     ],
+     "ans": 1,
+     "explain": "seat（座位）有 ea，唸長音 /i/；set 是短音。"
+    },
+    {
+     "id": "s4",
+     "type": "listen",
+     "src": "英語課本 p.17 Listen and Circle（改寫）",
+     "q": "聽一聽，選出你聽到的單字。",
+     "say": "tree",
+     "opts": [
+      "tree",
+      "tray"
+     ],
+     "ans": 0,
+     "explain": "tree（樹）的 ee 唸 /i/；tray（托盤）的 ay 唸 /e/。"
+    }
+   ]
+  },
+  {
+   "id": "opening",
+   "title": "開放日與時間",
+   "tag": "生活應用",
+   "seal": "開",
+   "place": "恐龍博物館",
+   "intro": "出去玩之前，先看看開放日和開放時間，才不會白跑一趟！",
+   "building": {
+    "type": "dino",
+    "banner": "開"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "mc",
+     "src": "英語課本 p.18 Mini Task",
+     "q": "奎爾公園的 Opening Days 是 Sunday – Saturday，意思是？",
+     "opts": [
+      "只有週末開放",
+      "星期一休息",
+      "每天都開放",
+      "星期二到星期日開放"
+     ],
+     "ans": 2,
+     "explain": "Sunday 到 Saturday 就是一整個星期，所以每天都開放，時間是 9:30 a.m.–7:30 p.m.。"
+    },
+    {
+     "id": "s2",
+     "type": "match",
+     "src": "英語課本 p.19 Where I Want to Go",
+     "q": "科博館可以看到什麼？把單字配一配。",
+     "pairs": [
+      [
+       "dinosaur",
+       "恐龍"
+      ],
+      [
+       "fossil",
+       "化石"
+      ],
+      [
+       "model",
+       "模型"
+      ]
+     ],
+     "explain": "I can see dinosaur fossils and models there.（在那裡可以看到恐龍化石和模型。）"
+    },
+    {
+     "id": "s3",
+     "type": "cloze",
+     "src": "英語課本 p.19 Where I Want to Go",
+     "q": "把介紹台中科博館的句子填完整。",
+     "text": "I want to go to the National Museum of Natural Science in Taichung. It's open from [Tuesday] to [Sunday].",
+     "extra": [
+      "Monday",
+      "Saturday"
+     ],
+     "explain": "科博館的 Opening Days 是 Tuesday – Sunday，所以說 It's open from Tuesday to Sunday.，星期一休館。"
+    }
+   ]
+  },
+  {
+   "id": "trip-map",
+   "title": "西班牙旅行地圖",
+   "tag": "統整閱讀",
+   "seal": "遊",
+   "place": "世界地球儀",
+   "intro": "最後，把這趟西班牙之旅整理成一張心智圖：When、Where、What 都要填好！",
+   "building": {
+    "type": "globe",
+    "banner": "遊"
+   },
+   "steps": [
+    {
+     "id": "s1",
+     "type": "cloze",
+     "src": "英語課本 p.20 Read and Write",
+     "q": "照 Reading Time 的心智圖，把句子填完整。",
+     "text": "On [Friday], the kids are in Park Güell. They [book the tickets], [see the church], and [watch a football game].",
+     "extra": [
+      "Monday",
+      "catch the ball"
+     ],
+     "explain": "When：Friday；Where：Park Güell；What：book the tickets、see the church、watch a football game。"
+    },
+    {
+     "id": "s2",
+     "type": "mc",
+     "src": "英語課本 p.20 Listen and Read",
+     "q": "Mia 和 Edison 為什麼決定去看足球？",
+     "opts": [
+      "因為今天下雨",
+      "因為 Rocky 想接球",
+      "因為他們在教堂看到一個穿足球 T 恤的人",
+      "因為門票賣完了"
+     ],
+     "ans": 2,
+     "explain": "Mia and Edison see a man in a football T-shirt, so they decide to watch a football game. so 是「所以」，前面就是原因。"
+    },
+    {
+     "id": "s3",
+     "type": "match",
+     "src": "英語課本 p.20 單字欄",
+     "q": "Reading Time 的單字配一配。",
+     "pairs": [
+      [
+       "kid",
+       "小孩"
+      ],
+      [
+       "church",
+       "教堂"
+      ],
+      [
+       "decide",
+       "決定"
+      ],
+      [
+       "catch",
+       "接住"
+      ],
+      [
+       "so",
+       "所以"
+      ]
+     ],
+     "explain": "Rocky catches the ball. 就是 Rocky 接住球。"
+    },
+    {
+     "id": "s4",
+     "type": "order",
+     "src": "英語課本 p.20 Listen and Read",
+     "q": "照故事發生的順序排一排。",
+     "items": [
+      "Mia and Teddy book the tickets.",
+      "They see the church.",
+      "They see a man in a football T-shirt.",
+      "They go to the stadium.",
+      "Rocky catches the ball."
+     ],
+     "explain": "先在奎爾公園訂票，再去聖家堂；看到穿足球 T 恤的人，於是去球場看比賽，最後 Rocky 接住了球。"
+    },
+    {
+     "id": "s5",
+     "type": "open",
+     "src": "英語課本 p.19 Where I Want to Go",
+     "q": "Where do you want to go? 學課本 p.19 的小男生，寫出你想去的地方和開放日：I want to go to ___. It's open from ___ to ___.",
+     "ideas": [
+      "I want to go to the zoo. It's open from Tuesday to Sunday.（先查好開放日，很多地方星期一休息）",
+      "I want to go to the beach. It's open every day.",
+      "最後加一句 I can see ___ there.，說說在那裡可以看到什麼。"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -26,6 +26,11 @@
    "lessons": [
     {"id": "soc-5a-01", "grade": "5上", "no": 1, "title": "臺灣的地理位置與文化發展有何關係？", "place": "海港小鎮", "file": "content/soc-5a-01.json"},
     {"id": "soc-5a-02", "grade": "5上", "no": 2, "title": "社會規範如何影響人們的行為？", "place": "秩序港灣", "file": "content/soc-5a-02.json"}
+   ]},
+  {"id": "en", "name": "英文", "region": "環遊島", "seal": "英", "theme": "world",
+   "buddy": "qiuqiu",
+   "lessons": [
+    {"id": "en-5a-01", "grade": "5上", "no": 1, "title": "What Day Is Today?", "place": "巴塞隆納", "file": "content/en-5a-01.json"}
    ]}
  ]
 }

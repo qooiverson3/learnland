@@ -4,13 +4,14 @@ const [,,catPath,lessonPath,prevPath]=process.argv;
 const cat=JSON.parse(fs.readFileSync(catPath,'utf8'));
 const L=JSON.parse(fs.readFileSync(lessonPath,'utf8'));
 const errs=[],warns=[];const E=m=>errs.push(m),W=m=>warns.push(m);
-// 每個場景模板可用的建築；要和 index.html 的 BUILD / GEAR / HARBOR / FOREST 保持一致
+// 每個場景模板可用的建築；要和 index.html 的 BUILD / GEAR / HARBOR / FOREST / WORLD 保持一致
 const TEMPLATES={
   'ancient-city':['gate','market','mansion','library','station','palace','school','teahouse','stage','drill','drumtower','hall'],
   'gear-city':['gate','gearworks','clocktower','scale','lab','fuelstop','tunnel','cubes','orchard','windmill','tower','workshop','cablecar'],
   'harbor-town':['gate','globe','compass','port','airport','ferry','islet','netbeach','fishhut','temple','canoe','stage','lighthouse','house'],
-  'forest-camp':['gate','weather','pond','greenhouse','dryrack','solarhouse','heater','streetlight','solarfarm','cabin','bigtree','observatory','sundial','prism','lens']};
-const TYPES=['mc','order','match','cloze','open','num'];
+  'forest-camp':['gate','weather','pond','greenhouse','dryrack','solarhouse','heater','streetlight','solarfarm','cabin','bigtree','observatory','sundial','prism','lens'],
+  'world-trip':['gate','mosaic','cathedral','stadium','ticket','calendar','shop','museum','clock','beach','house','dino','globe']};
+const TYPES=['mc','listen','order','match','cloze','open','num'];
 const numRe=/^-?\d+(\.\d+)?$/;
 const idRe=/^[a-z0-9][a-z0-9-]*$/;
 if(!/^[a-z]+-\d+[ab]-\d{2}$/.test(L.id))E(`lesson id "${L.id}" 不符合 <subject>-<年級><a|b>-<兩位數課次>`);
@@ -44,7 +45,9 @@ L.levels.forEach((lv,li)=>{const at=`第${li+1}關(${lv.id})`;
     if(st.type!=='open'&&!st.explain)W(`${sat} 沒有 explain`);
     if(!st.src&&!st.where)W(`${sat} 沒有出處（src，例如「數學課本 p.26 第 5 題②」）`);
     if(st.src!==undefined&&(typeof st.src!=='string'||!st.src.trim()))E(`${sat} src 要是非空字串`);
-    if(st.type==='mc'){const n=(st.opts||[]).length;if(n<2||n>6)E(`${sat} opts 要 2～6 個`);
+    if(st.say!==undefined&&(typeof st.say!=='string'||!st.say.trim()||st.say.length>200))E(`${sat} say 要是 200 字以內的英文句子`);
+    if(st.type==='listen'&&!st.say)E(`${sat} listen 題要有 say（要唸出來的英文）`);
+    if(st.type==='mc'||st.type==='listen'){const n=(st.opts||[]).length;if(n<2||n>6)E(`${sat} opts 要 2～6 個`);
       if(new Set(st.opts).size!==n)E(`${sat} opts 有重複`);
       const a=[].concat(st.ans);if(!a.length||a.some(x=>!Number.isInteger(x)||x<0||x>=n))E(`${sat} ans 超出選項範圍`);
       if(Array.isArray(st.ans)&&new Set(st.ans).size!==st.ans.length)E(`${sat} ans 重複`);
